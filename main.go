@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pivotal-cf/jhanda"
 	"github.com/ryanmoran/faux/gen"
@@ -15,16 +16,36 @@ import (
 
 func main() {
 	var options struct {
-		File      string `long:"file"      short:"f" env:"GOFILE" description:"the name of the file to parse"     required:"true"`
-		Output    string `long:"output"    short:"o"              description:"the name of the file to write"     required:"true"`
-		Interface string `long:"interface" short:"i"              description:"the name of the interface to fake" required:"true"`
+		File      string `long:"file"      short:"f" env:"GOFILE" description:"the name of the file to parse"`
+		Output    string `long:"output"    short:"o"              description:"the name of the file to write"`
+		Interface string `long:"interface" short:"i"              description:"the name of the interface to fake"`
+		Help      bool   `long:"help"      short:"h"              description:"prints the usage"`
 	}
 
+	stdout := log.New(os.Stdout, "", 0)
 	stderr := log.New(os.Stderr, "", 0)
 
 	_, err := jhanda.Parse(&options, os.Args[1:])
 	if err != nil {
 		stderr.Fatal(err)
+	}
+
+	if options.Help {
+		flags, err := jhanda.PrintUsage(options)
+		if err != nil {
+			stderr.Fatal(err)
+		}
+
+		flags = strings.Join(strings.Split(flags, "\n"), "\n  ")
+
+		stdout.Printf(`faux helps you generate fakes
+
+Usage: faux --file <FILE> --output <FILE> --interface <INTERFACE-TO-FAKE> [--help]
+
+Flags:
+  %s
+`, flags)
+		os.Exit(0)
 	}
 
 	source, err := os.Open(options.File)

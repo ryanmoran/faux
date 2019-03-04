@@ -132,6 +132,18 @@ func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
 		})
 	})
 
+	Context("when the help flag is provided", func() {
+		It("prints the usage", func() {
+			command := exec.Command(executable, "-h")
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			Expect(string(session.Out.Contents())).To(ContainSubstring(`banana`))
+		})
+	})
+
 	Context("failure cases", func() {
 		Context("when a unknown flag is passed", func() {
 			It("exits non-zero with an error", func() {
