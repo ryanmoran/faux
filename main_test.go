@@ -140,7 +140,19 @@ func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 
-			Expect(string(session.Out.Contents())).To(ContainSubstring(`banana`))
+			Expect(string(session.Out.Contents())).To(ContainSubstring("faux helps you generate fakes"))
+		})
+	})
+
+	Context("when the version flag is provided", func() {
+		It("prints the version", func() {
+			command := exec.Command(executable, "-v")
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			Expect(string(session.Out.Contents())).To(ContainSubstring(version))
 		})
 	})
 
