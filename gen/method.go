@@ -1,0 +1,127 @@
+package gen
+
+import (
+	"go/ast"
+	"go/token"
+)
+
+type Method struct {
+	Name     string
+	Receiver string
+	Params   []Argument
+	Results  []Argument
+}
+
+func (m Method) FieldStruct() *ast.Field {
+	var receivesFields, returnsFields []*ast.Field
+
+	for _, argument := range m.Params {
+		receivesFields = append(receivesFields, argument.Field(true))
+	}
+
+	for _, argument := range m.Results {
+		returnsFields = append(returnsFields, argument.Field(true))
+	}
+
+	return &ast.Field{
+		Names: []*ast.Ident{
+			ast.NewIdent(m.Name + "Call"),
+		},
+		Type: &ast.StructType{
+			Fields: &ast.FieldList{
+				List: []*ast.Field{
+					&ast.Field{
+						Names: []*ast.Ident{
+							ast.NewIdent("CallCount"),
+						},
+						Type: ast.NewIdent("int"),
+					},
+					&ast.Field{
+						Names: []*ast.Ident{
+							ast.NewIdent("Receives"),
+						},
+						Type: &ast.StructType{
+							Fields: &ast.FieldList{
+								List: receivesFields,
+							},
+						},
+					},
+					&ast.Field{
+						Names: []*ast.Ident{
+							ast.NewIdent("Returns"),
+						},
+						Type: &ast.StructType{
+							Fields: &ast.FieldList{
+								List: returnsFields,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (m Method) MethodDeclaration() *ast.FuncDecl {
+	var params, results []*ast.Field
+	for _, argument := range m.Params {
+		params = append(params, argument.Field(false))
+	}
+
+	for _, argument := range m.Results {
+		results = append(results, &ast.Field{
+			Type: ast.NewIdent(argument.Type),
+		})
+	}
+
+	var statements []ast.Stmt
+
+	statements = append(statements, &ast.IncDecStmt{
+		X: &ast.SelectorExpr{
+			X: &ast.SelectorExpr{
+				X:   ast.NewIdent("f"),
+				Sel: ast.NewIdent(m.Name + "Call"),
+			},
+			Sel: ast.NewIdent("CallCount"),
+		},
+		Tok: token.INC,
+	})
+
+	for _, argument := range m.Params {
+		statements = append(statements, argument.AssignStatement())
+	}
+
+	var returnValues []ast.Expr
+	for _, argument := range m.Results {
+		returnValues = append(returnValues, argument.ReturnValue())
+	}
+
+	statements = append(statements, &ast.ReturnStmt{
+		Results: returnValues,
+	})
+
+	return &ast.FuncDecl{
+		Recv: &ast.FieldList{
+			List: []*ast.Field{
+				&ast.Field{
+					Names: []*ast.Ident{
+						ast.NewIdent("f"),
+					},
+					Type: ast.NewIdent("*" + m.Receiver),
+				},
+			},
+		},
+		Name: ast.NewIdent(m.Name),
+		Type: &ast.FuncType{
+			Params: &ast.FieldList{
+				List: params,
+			},
+			Results: &ast.FieldList{
+				List: results,
+			},
+		},
+		Body: &ast.BlockStmt{
+			List: statements,
+		},
+	}
+}
