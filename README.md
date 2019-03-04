@@ -13,6 +13,7 @@ Flags:
   --help, -h          bool    prints the usage
   --interface, -i     string  the name of the interface to fake
   --output, -o        string  the name of the file to write
+  --version, -v       bool    prints the version
 ```
 
 ## Example
