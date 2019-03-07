@@ -41,7 +41,7 @@ var _ = Describe("Argument", func() {
 			Expect(gen.NewArgument(&ast.Field{
 				Names: []*ast.Ident{ast.NewIdent("SomeName")},
 				Type:  ast.NewIdent("SomeType"),
-			}, "SomeMethod", fakeType)).To(Equal(gen.Argument{
+			}, "SomeMethod", fakeType, "fallbackName")).To(Equal(gen.Argument{
 				Method: "SomeMethod",
 				Name:   "someName",
 				Type:   "SomeType",

@@ -60,6 +60,58 @@ type SomeInterface interface{
 		}))
 	})
 
+	Context("when the fields are unnamed", func() {
+		It("parses the given file, returning a fake matching the given named interface", func() {
+			source := strings.NewReader(`package main
+
+import (
+  "bytes"
+	"io"
+)
+
+type SomeInterface interface{
+	SomeMethod(string, *bytes.Buffer) (int, io.Reader)
+}
+`)
+
+			fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fake).To(Equal(gen.Fake{
+				Name: "SomeInterface",
+				Methods: []gen.Method{
+					{
+						Name:     "SomeMethod",
+						Receiver: "SomeInterface",
+						Params: []gen.Argument{
+							{
+								Method: "SomeMethod",
+								Name:   "string",
+								Type:   "string",
+							},
+							{
+								Method: "SomeMethod",
+								Name:   "bytesBuffer",
+								Type:   "*bytes.Buffer",
+							},
+						},
+						Results: []gen.Argument{
+							{
+								Method: "SomeMethod",
+								Name:   "int",
+								Type:   "int",
+							},
+							{
+								Method: "SomeMethod",
+								Name:   "ioReader",
+								Type:   "io.Reader",
+							},
+						},
+					},
+				},
+			}))
+		})
+	})
+
 	Context("failure cases", func() {
 		Context("when the source file cannot be parsed", func() {
 			It("returns an error", func() {

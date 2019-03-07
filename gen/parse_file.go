@@ -55,13 +55,29 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 										methodName := field.Names[0].Name
 
 										var params []Argument
+										paramTypeCounts := map[string]int{}
 										for _, field := range funcType.Params.List {
-											params = append(params, NewArgument(field, methodName, typesInfo[field.Type].Type))
+											fallbackName := types.ExprString(field.Type)
+											paramTypeCounts[fallbackName] = paramTypeCounts[fallbackName] + 1
+
+											if paramTypeCounts[fallbackName] > 1 {
+												fallbackName = fmt.Sprintf("%s%d", fallbackName, paramTypeCounts[fallbackName])
+											}
+
+											params = append(params, NewArgument(field, methodName, typesInfo[field.Type].Type, fallbackName))
 										}
 
 										var results []Argument
+										resultTypeCounts := map[string]int{}
 										for _, field := range funcType.Results.List {
-											results = append(results, NewArgument(field, methodName, typesInfo[field.Type].Type))
+											fallbackName := types.ExprString(field.Type)
+											resultTypeCounts[fallbackName] = resultTypeCounts[fallbackName] + 1
+
+											if resultTypeCounts[fallbackName] > 1 {
+												fallbackName = fmt.Sprintf("%s%d", fallbackName, resultTypeCounts[fallbackName])
+											}
+
+											results = append(results, NewArgument(field, methodName, typesInfo[field.Type].Type, fallbackName))
 										}
 
 										methods = append(methods, Method{
