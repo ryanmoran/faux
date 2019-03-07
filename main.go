@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"go/format"
 	"go/token"
 	"log"
@@ -94,8 +93,6 @@ Flags:
 	if err != nil {
 		stderr.Fatalf("could not format fake ast: %s", err)
 	}
-
-	fmt.Printf("%s", buffer.String())
 
 	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
 	if err != nil {
