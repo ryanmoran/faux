@@ -54,37 +54,11 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 									if funcType, ok := field.Type.(*ast.FuncType); ok {
 										methodName := field.Names[0].Name
 
-										var params []Argument
-										paramTypeCounts := map[string]int{}
-										for _, field := range funcType.Params.List {
-											fallbackName := types.ExprString(field.Type)
-											paramTypeCounts[fallbackName] = paramTypeCounts[fallbackName] + 1
-
-											if paramTypeCounts[fallbackName] > 1 {
-												fallbackName = fmt.Sprintf("%s%d", fallbackName, paramTypeCounts[fallbackName])
-											}
-
-											params = append(params, NewArgument(field, methodName, typesInfo[field.Type].Type, fallbackName))
-										}
-
-										var results []Argument
-										resultTypeCounts := map[string]int{}
-										for _, field := range funcType.Results.List {
-											fallbackName := types.ExprString(field.Type)
-											resultTypeCounts[fallbackName] = resultTypeCounts[fallbackName] + 1
-
-											if resultTypeCounts[fallbackName] > 1 {
-												fallbackName = fmt.Sprintf("%s%d", fallbackName, resultTypeCounts[fallbackName])
-											}
-
-											results = append(results, NewArgument(field, methodName, typesInfo[field.Type].Type, fallbackName))
-										}
-
 										methods = append(methods, Method{
 											Name:     methodName,
 											Receiver: typeSpec.Name.Name,
-											Params:   params,
-											Results:  results,
+											Params:   parseArguments(methodName, typesInfo, funcType.Params.List),
+											Results:  parseArguments(methodName, typesInfo, funcType.Results.List),
 										})
 									}
 								}
@@ -102,4 +76,35 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 	}
 
 	return Fake{}, false, nil
+}
+
+func parseArguments(methodName string, typesInfo map[ast.Expr]types.TypeAndValue, fields []*ast.Field) []Argument {
+	argTypeCounts := map[string]int{}
+
+	var args []Argument
+	for _, field := range fields {
+		fallbackName := types.ExprString(field.Type)
+
+		if len(field.Names) > 1 {
+			for _, fieldName := range field.Names {
+				argTypeCounts[fallbackName] = argTypeCounts[fallbackName] + 1
+
+				if argTypeCounts[fallbackName] > 1 {
+					fallbackName = fmt.Sprintf("%s%d", fallbackName, argTypeCounts[fallbackName])
+				}
+
+				args = append(args, NewArgument(types.ExprString(fieldName), field, methodName, typesInfo[field.Type].Type, fallbackName))
+			}
+		} else {
+			argTypeCounts[fallbackName] = argTypeCounts[fallbackName] + 1
+
+			if argTypeCounts[fallbackName] > 1 {
+				fallbackName = fmt.Sprintf("%s%d", fallbackName, argTypeCounts[fallbackName])
+			}
+
+			args = append(args, NewArgument("", field, methodName, typesInfo[field.Type].Type, fallbackName))
+		}
+	}
+
+	return args
 }

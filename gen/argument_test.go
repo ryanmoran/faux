@@ -38,7 +38,7 @@ var _ = Describe("Argument", func() {
 			fakeType := &FakeType{}
 			fakeType.StringCall.Returns.String = "SomeType"
 
-			Expect(gen.NewArgument(&ast.Field{
+			Expect(gen.NewArgument("", &ast.Field{
 				Names: []*ast.Ident{ast.NewIdent("SomeName")},
 				Type:  ast.NewIdent("SomeType"),
 			}, "SomeMethod", fakeType, "fallbackName")).To(Equal(gen.Argument{

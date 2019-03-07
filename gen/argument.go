@@ -15,9 +15,13 @@ type Argument struct {
 	Type   string
 }
 
-func NewArgument(field *ast.Field, method string, fieldType types.Type, name string) Argument {
+func NewArgument(fieldName string, field *ast.Field, method string, fieldType types.Type, name string) Argument {
 	if len(field.Names) > 0 {
 		name = field.Names[0].Name
+	}
+
+	if fieldName != "" {
+		name = fieldName
 	}
 
 	return Argument{

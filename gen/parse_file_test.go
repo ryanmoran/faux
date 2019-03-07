@@ -112,6 +112,55 @@ type SomeInterface interface{
 		})
 	})
 
+	Context("when the types are elided", func() {
+		It("parses the given file, returning a fake matching the given named interface", func() {
+			source := strings.NewReader(`package main
+
+import "io"
+
+type SomeInterface interface{
+	SomeMethod(someParam1, someParam2 string) (int, io.Reader)
+}
+`)
+
+			fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fake).To(Equal(gen.Fake{
+				Name: "SomeInterface",
+				Methods: []gen.Method{
+					{
+						Name:     "SomeMethod",
+						Receiver: "SomeInterface",
+						Params: []gen.Argument{
+							{
+								Method: "SomeMethod",
+								Name:   "someParam1",
+								Type:   "string",
+							},
+							{
+								Method: "SomeMethod",
+								Name:   "someParam2",
+								Type:   "string",
+							},
+						},
+						Results: []gen.Argument{
+							{
+								Method: "SomeMethod",
+								Name:   "int",
+								Type:   "int",
+							},
+							{
+								Method: "SomeMethod",
+								Name:   "ioReader",
+								Type:   "io.Reader",
+							},
+						},
+					},
+				},
+			}))
+		})
+	})
+
 	Context("failure cases", func() {
 		Context("when the source file cannot be parsed", func() {
 			It("returns an error", func() {
