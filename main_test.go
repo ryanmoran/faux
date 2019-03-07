@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -28,17 +29,19 @@ var _ = Describe("faux", func() {
 		sourceFile = filepath.Join(tempDir, "source.go")
 		outputFile = filepath.Join(tempDir, "fakes", "output.go")
 
-		err = ioutil.WriteFile(sourceFile, []byte(`package main
+		interfaceFixtureFile, err := os.Open("fixtures/interfaces.go")
+		Expect(err).NotTo(HaveOccurred())
 
-import (
-	"io"
-	"bytes"
-)
+		sourceFile, err := os.OpenFile(sourceFile, os.O_RDWR|os.O_CREATE, 0644)
+		Expect(err).NotTo(HaveOccurred())
 
-type SomeInterface interface {
-	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
-}
-`), 0644)
+		_, err = io.Copy(sourceFile, interfaceFixtureFile)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = interfaceFixtureFile.Close()
+		Expect(err).NotTo(HaveOccurred())
+
+		err = sourceFile.Close()
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -63,31 +66,10 @@ type SomeInterface interface {
 		outputContent, err := ioutil.ReadFile(outputFile)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(string(outputContent)).To(ContainSubstring(`package fakes
+		expectedContent, err := ioutil.ReadFile("fixtures/fakes/some_interface.go")
+		Expect(err).NotTo(HaveOccurred())
 
-import (
-	"bytes"
-	"io"
-)
-
-type SomeInterface struct {
-	SomeMethodCall struct {
-		CallCount int
-		Receives  struct {
-			SomeParam *bytes.Buffer
-		}
-		Returns struct {
-			SomeResult io.Reader
-		}
-	}
-}
-
-func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
-	f.SomeMethodCall.CallCount++
-	f.SomeMethodCall.Receives.SomeParam = someParam
-	return f.SomeMethodCall.Returns.SomeResult
-}
-`))
+		Expect(string(outputContent)).To(Equal(string(expectedContent)))
 	})
 
 	Context("when the source file is provided via an environment variable", func() {
@@ -104,141 +86,10 @@ func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
 			outputContent, err := ioutil.ReadFile(outputFile)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(string(outputContent)).To(ContainSubstring(`package fakes
-
-import (
-	"bytes"
-	"io"
-)
-
-type SomeInterface struct {
-	SomeMethodCall struct {
-		CallCount int
-		Receives  struct {
-			SomeParam *bytes.Buffer
-		}
-		Returns struct {
-			SomeResult io.Reader
-		}
-	}
-}
-
-func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
-	f.SomeMethodCall.CallCount++
-	f.SomeMethodCall.Receives.SomeParam = someParam
-	return f.SomeMethodCall.Returns.SomeResult
-}
-`))
-		})
-	})
-
-	Context("when the help flag is provided", func() {
-		It("prints the usage", func() {
-			command := exec.Command(executable, "-h")
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			expectedContent, err := ioutil.ReadFile("fixtures/fakes/some_interface.go")
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(0))
 
-			Expect(string(session.Out.Contents())).To(ContainSubstring("faux helps you generate fakes"))
-		})
-	})
-
-	Context("when the version flag is provided", func() {
-		It("prints the version", func() {
-			command := exec.Command(executable, "-v")
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(0))
-
-			Expect(string(session.Out.Contents())).To(ContainSubstring(version))
-		})
-	})
-
-	Context("failure cases", func() {
-		Context("when a unknown flag is passed", func() {
-			It("exits non-zero with an error", func() {
-				command := exec.Command(executable, "--unknown-flag")
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-
-				Expect(string(session.Err.Contents())).To(ContainSubstring("flag provided but not defined: -unknown-flag"))
-			})
-		})
-
-		Context("when the source file does not exist", func() {
-			It("exits non-zero with an error", func() {
-				err := os.Remove(sourceFile)
-				Expect(err).NotTo(HaveOccurred())
-
-				command := exec.Command(executable,
-					"--file", sourceFile,
-					"--output", outputFile,
-					"--interface", "SomeInterface")
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-
-				Expect(string(session.Err.Contents())).To(ContainSubstring("could not open source file"))
-			})
-		})
-
-		Context("when the source file cannot be parsed", func() {
-			It("exits non-zero with an error", func() {
-				err := ioutil.WriteFile(sourceFile, []byte(`garbage`), 0644)
-				Expect(err).NotTo(HaveOccurred())
-
-				command := exec.Command(executable,
-					"--file", sourceFile,
-					"--output", outputFile,
-					"--interface", "SomeInterface")
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-
-				Expect(string(session.Err.Contents())).To(ContainSubstring("could not parse source"))
-			})
-		})
-
-		Context("when the output file directory cannot be created", func() {
-			It("exits non-zero with an error", func() {
-				err := os.Chmod(tempDir, 0555)
-				Expect(err).NotTo(HaveOccurred())
-
-				command := exec.Command(executable,
-					"--file", sourceFile,
-					"--output", outputFile,
-					"--interface", "SomeInterface")
-
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-
-				Expect(string(session.Err.Contents())).To(ContainSubstring("could not create directory"))
-			})
-
-			Context("when the output file cannot be created", func() {
-				It("exits non-zero with an error", func() {
-					err := os.Mkdir(filepath.Join(tempDir, "fakes"), 0555)
-					Expect(err).NotTo(HaveOccurred())
-
-					command := exec.Command(executable,
-						"--file", sourceFile,
-						"--output", outputFile,
-						"--interface", "SomeInterface")
-
-					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-					Expect(err).NotTo(HaveOccurred())
-					Eventually(session).Should(gexec.Exit(1))
-
-					Expect(string(session.Err.Contents())).To(ContainSubstring("could not create output file"))
-				})
-			})
+			Expect(string(outputContent)).To(Equal(string(expectedContent)))
 		})
 	})
 })

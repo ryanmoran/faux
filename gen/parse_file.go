@@ -3,21 +3,44 @@ package gen
 import (
 	"fmt"
 	"go/ast"
+	"go/importer"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"io"
 )
 
-func Parse(filename string, source io.Reader, name string) (Fake, error) {
-	var files []*ast.File
-
-	file, err := parser.ParseFile(token.NewFileSet(), filename, source, 0)
+func ParseFile(filename string, source io.Reader, name string) (Fake, error) {
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, filename, source, 0)
 	if err != nil {
 		return Fake{}, fmt.Errorf("could not parse source: %s", err)
 	}
 
-	files = append(files, file)
+	info := types.Info{
+		Types: make(map[ast.Expr]types.TypeAndValue),
+		Defs:  make(map[*ast.Ident]types.Object),
+		Uses:  make(map[*ast.Ident]types.Object),
+	}
 
+	conf := types.Config{Importer: importer.Default()}
+	_, err = conf.Check("banana", fset, []*ast.File{file}, &info)
+	if err != nil {
+		panic(err)
+	}
+
+	fake, found, err := parse(name, info.Types, file)
+	if err != nil {
+		panic(err)
+	}
+	if !found {
+		return Fake{}, fmt.Errorf("could not find interface %q in %s", name, filename)
+	}
+
+	return fake, nil
+}
+
+func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast.File) (Fake, bool, error) {
 	for _, file := range files {
 		for _, declaration := range file.Decls {
 			if generalDeclaration, ok := declaration.(*ast.GenDecl); ok {
@@ -29,27 +52,16 @@ func Parse(filename string, source io.Reader, name string) (Fake, error) {
 
 								for _, field := range interfaceType.Methods.List {
 									if funcType, ok := field.Type.(*ast.FuncType); ok {
-										var params []Argument
 										methodName := field.Names[0].Name
 
+										var params []Argument
 										for _, field := range funcType.Params.List {
-											argument, err := NewArgument(field, methodName)
-											if err != nil {
-												return Fake{}, err
-											}
-
-											params = append(params, argument)
+											params = append(params, NewArgument(field, methodName, typesInfo[field.Type].Type))
 										}
 
 										var results []Argument
-
 										for _, field := range funcType.Results.List {
-											argument, err := NewArgument(field, methodName)
-											if err != nil {
-												return Fake{}, err
-											}
-
-											results = append(results, argument)
+											results = append(results, NewArgument(field, methodName, typesInfo[field.Type].Type))
 										}
 
 										methods = append(methods, Method{
@@ -64,7 +76,7 @@ func Parse(filename string, source io.Reader, name string) (Fake, error) {
 								return Fake{
 									Name:    typeSpec.Name.Name,
 									Methods: methods,
-								}, nil
+								}, true, nil
 							}
 						}
 					}
@@ -73,5 +85,5 @@ func Parse(filename string, source io.Reader, name string) (Fake, error) {
 		}
 	}
 
-	return Fake{}, fmt.Errorf("could not find interface %q in %s", name, filename)
+	return Fake{}, false, nil
 }

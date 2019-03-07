@@ -13,6 +13,8 @@ type Method struct {
 }
 
 func (m Method) FieldStruct() *ast.Field {
+	var fields []*ast.Field
+
 	var receivesFields, returnsFields []*ast.Field
 
 	for _, argument := range m.Params {
@@ -23,40 +25,46 @@ func (m Method) FieldStruct() *ast.Field {
 		returnsFields = append(returnsFields, argument.Field(true))
 	}
 
+	fields = append(fields, &ast.Field{
+		Names: []*ast.Ident{
+			ast.NewIdent("CallCount"),
+		},
+		Type: ast.NewIdent("int"),
+	})
+
+	if len(receivesFields) > 0 {
+		fields = append(fields, &ast.Field{
+			Names: []*ast.Ident{
+				ast.NewIdent("Receives"),
+			},
+			Type: &ast.StructType{
+				Fields: &ast.FieldList{
+					List: receivesFields,
+				},
+			},
+		})
+	}
+
+	if len(returnsFields) > 0 {
+		fields = append(fields, &ast.Field{
+			Names: []*ast.Ident{
+				ast.NewIdent("Returns"),
+			},
+			Type: &ast.StructType{
+				Fields: &ast.FieldList{
+					List: returnsFields,
+				},
+			},
+		})
+	}
+
 	return &ast.Field{
 		Names: []*ast.Ident{
 			ast.NewIdent(m.Name + "Call"),
 		},
 		Type: &ast.StructType{
 			Fields: &ast.FieldList{
-				List: []*ast.Field{
-					&ast.Field{
-						Names: []*ast.Ident{
-							ast.NewIdent("CallCount"),
-						},
-						Type: ast.NewIdent("int"),
-					},
-					&ast.Field{
-						Names: []*ast.Ident{
-							ast.NewIdent("Receives"),
-						},
-						Type: &ast.StructType{
-							Fields: &ast.FieldList{
-								List: receivesFields,
-							},
-						},
-					},
-					&ast.Field{
-						Names: []*ast.Ident{
-							ast.NewIdent("Returns"),
-						},
-						Type: &ast.StructType{
-							Fields: &ast.FieldList{
-								List: returnsFields,
-							},
-						},
-					},
-				},
+				List: fields,
 			},
 		},
 	}

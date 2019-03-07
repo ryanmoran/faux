@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"go/format"
 	"go/token"
 	"log"
@@ -21,6 +22,7 @@ func main() {
 		Help    bool `long:"help"    short:"h" description:"prints the usage"`
 		Version bool `long:"version" short:"v" description:"prints the version"`
 
+		Package   string `long:"package"   short:"p"              description:"the name of the package that contains the interface"`
 		File      string `long:"file"      short:"f" env:"GOFILE" description:"the name of the file to parse"`
 		Output    string `long:"output"    short:"o"              description:"the name of the file to write"`
 		Interface string `long:"interface" short:"i"              description:"the name of the interface to fake"`
@@ -57,14 +59,23 @@ Flags:
 		os.Exit(0)
 	}
 
-	source, err := os.Open(options.File)
-	if err != nil {
-		stderr.Fatalf("could not open source file: %s", err)
-	}
+	var fake gen.Fake
+	if options.Package != "" {
+		var err error
+		fake, err = gen.ParsePackage(options.Package, options.Interface)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		source, err := os.Open(options.File)
+		if err != nil {
+			stderr.Fatalf("could not open source file: %s", err)
+		}
 
-	fake, err := gen.Parse(options.File, source, options.Interface)
-	if err != nil {
-		stderr.Fatal(err)
+		fake, err = gen.ParseFile(options.File, source, options.Interface)
+		if err != nil {
+			stderr.Fatal(err)
+		}
 	}
 
 	err = os.MkdirAll(filepath.Dir(options.Output), 0755)
@@ -84,7 +95,8 @@ Flags:
 		stderr.Fatalf("could not format fake ast: %s", err)
 	}
 
-	imports.Debug = true
+	fmt.Printf("%s", buffer.String())
+
 	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
 	if err != nil {
 		stderr.Fatalf("could not process imports: %s", err)

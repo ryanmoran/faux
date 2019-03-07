@@ -1,12 +1,12 @@
 package gen
 
 import (
-	"bytes"
-	"fmt"
 	"go/ast"
-	"go/format"
 	"go/token"
+	"go/types"
 	"strings"
+
+	"github.com/iancoleman/strcase"
 )
 
 type Argument struct {
@@ -15,18 +15,19 @@ type Argument struct {
 	Type   string
 }
 
-func NewArgument(field *ast.Field, method string) (Argument, error) {
-	var buf bytes.Buffer
-	err := format.Node(&buf, token.NewFileSet(), field.Type)
-	if err != nil {
-		return Argument{}, fmt.Errorf("could not format argument field type: %s", err)
+func NewArgument(field *ast.Field, method string, fieldType types.Type) Argument {
+	name := types.ExprString(field.Type)
+	if len(field.Names) > 0 {
+		name = field.Names[0].Name
 	}
 
 	return Argument{
 		Method: method,
-		Name:   field.Names[0].Name,
-		Type:   buf.String(),
-	}, nil
+		Name:   strcase.ToLowerCamel(name),
+		Type: types.TypeString(fieldType, func(p *types.Package) string {
+			return p.Name()
+		}),
+	}
 }
 
 func (a Argument) Field(titleized bool) *ast.Field {

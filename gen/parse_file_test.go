@@ -9,16 +9,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Parse", func() {
+var _ = Describe("ParseFile", func() {
 	It("parses the given file, returning a fake matching the given named interface", func() {
 		source := strings.NewReader(`package main
+
+import (
+  "bytes"
+	"io"
+)
 
 type SomeInterface interface{
 	SomeMethod(someParam1 string, someParam2 *bytes.Buffer) (someResult1 int, someResult2 io.Reader)
 }
 `)
 
-		fake, err := gen.Parse("some-file.go", source, "SomeInterface")
+		fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fake).To(Equal(gen.Fake{
 			Name: "SomeInterface",
@@ -59,7 +64,7 @@ type SomeInterface interface{
 		Context("when the source file cannot be parsed", func() {
 			It("returns an error", func() {
 				source := strings.NewReader("%%%")
-				_, err := gen.Parse("some-file.go", source, "SomeInterface")
+				_, err := gen.ParseFile("some-file.go", source, "SomeInterface")
 				Expect(err).To(MatchError("could not parse source: some-file.go:1:1: expected 'package', found '%'"))
 			})
 		})
@@ -67,7 +72,7 @@ type SomeInterface interface{
 		Context("when the given interface name cannot be found", func() {
 			It("returns an error", func() {
 				source := strings.NewReader("package main")
-				_, err := gen.Parse("some-file.go", source, "SomeInterface")
+				_, err := gen.ParseFile("some-file.go", source, "SomeInterface")
 				Expect(err).To(MatchError("could not find interface \"SomeInterface\" in some-file.go"))
 			})
 		})

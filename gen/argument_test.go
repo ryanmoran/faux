@@ -2,6 +2,7 @@ package gen_test
 
 import (
 	"go/ast"
+	"go/types"
 
 	"github.com/ryanmoran/faux/gen"
 
@@ -9,26 +10,42 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type FakeType struct {
+	UnderlyingCall struct {
+		Returns struct {
+			Type types.Type
+		}
+	}
+
+	StringCall struct {
+		Returns struct {
+			String string
+		}
+	}
+}
+
+func (f *FakeType) Underlying() types.Type {
+	return f.UnderlyingCall.Returns.Type
+}
+
+func (f *FakeType) String() string {
+	return f.StringCall.Returns.String
+}
+
 var _ = Describe("Argument", func() {
 	Describe("NewArgument", func() {
 		It("creates an argument", func() {
-			argument, err := gen.NewArgument(&ast.Field{
+			fakeType := &FakeType{}
+			fakeType.StringCall.Returns.String = "SomeType"
+
+			Expect(gen.NewArgument(&ast.Field{
 				Names: []*ast.Ident{ast.NewIdent("SomeName")},
 				Type:  ast.NewIdent("SomeType"),
-			}, "SomeMethod")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(argument).To(Equal(gen.Argument{
+			}, "SomeMethod", fakeType)).To(Equal(gen.Argument{
 				Method: "SomeMethod",
-				Name:   "SomeName",
+				Name:   "someName",
 				Type:   "SomeType",
 			}))
-		})
-
-		Context("when the field is invalid", func() {
-			It("returns an error", func() {
-				_, err := gen.NewArgument(&ast.Field{}, "SomeMethod")
-				Expect(err).To(MatchError(ContainSubstring("could not format argument field type")))
-			})
 		})
 	})
 })
