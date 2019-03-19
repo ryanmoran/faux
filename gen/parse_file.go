@@ -57,8 +57,8 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 										methods = append(methods, Method{
 											Name:     methodName,
 											Receiver: typeSpec.Name.Name,
-											Params:   parseArguments(methodName, typesInfo, funcType.Params.List),
-											Results:  parseArguments(methodName, typesInfo, funcType.Results.List),
+											Params:   parseArguments(methodName, typesInfo, funcType.Params),
+											Results:  parseArguments(methodName, typesInfo, funcType.Results),
 										})
 									}
 								}
@@ -78,31 +78,33 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 	return Fake{}, false, nil
 }
 
-func parseArguments(methodName string, typesInfo map[ast.Expr]types.TypeAndValue, fields []*ast.Field) []Argument {
+func parseArguments(methodName string, typesInfo map[ast.Expr]types.TypeAndValue, fieldList *ast.FieldList) []Argument {
 	argTypeCounts := map[string]int{}
 
 	var args []Argument
-	for _, field := range fields {
-		fallbackName := types.ExprString(field.Type)
+	if fieldList != nil {
+		for _, field := range fieldList.List {
+			fallbackName := types.ExprString(field.Type)
 
-		if len(field.Names) > 1 {
-			for _, fieldName := range field.Names {
+			if len(field.Names) > 1 {
+				for _, fieldName := range field.Names {
+					argTypeCounts[fallbackName] = argTypeCounts[fallbackName] + 1
+
+					if argTypeCounts[fallbackName] > 1 {
+						fallbackName = fmt.Sprintf("%s%d", fallbackName, argTypeCounts[fallbackName])
+					}
+
+					args = append(args, NewArgument(types.ExprString(fieldName), field, methodName, typesInfo[field.Type].Type, fallbackName))
+				}
+			} else {
 				argTypeCounts[fallbackName] = argTypeCounts[fallbackName] + 1
 
 				if argTypeCounts[fallbackName] > 1 {
 					fallbackName = fmt.Sprintf("%s%d", fallbackName, argTypeCounts[fallbackName])
 				}
 
-				args = append(args, NewArgument(types.ExprString(fieldName), field, methodName, typesInfo[field.Type].Type, fallbackName))
+				args = append(args, NewArgument("", field, methodName, typesInfo[field.Type].Type, fallbackName))
 			}
-		} else {
-			argTypeCounts[fallbackName] = argTypeCounts[fallbackName] + 1
-
-			if argTypeCounts[fallbackName] > 1 {
-				fallbackName = fmt.Sprintf("%s%d", fallbackName, argTypeCounts[fallbackName])
-			}
-
-			args = append(args, NewArgument("", field, methodName, typesInfo[field.Type].Type, fallbackName))
 		}
 	}
 
