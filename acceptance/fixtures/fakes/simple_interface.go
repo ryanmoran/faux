@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-type SomeInterface struct {
+type SimpleInterface struct {
 	SomeMethodCall struct {
 		CallCount int
 		Receives  struct {
@@ -17,7 +17,7 @@ type SomeInterface struct {
 	}
 }
 
-func (f *SomeInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
+func (f *SimpleInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
 	f.SomeMethodCall.CallCount++
 	f.SomeMethodCall.Receives.SomeParam = someParam
 	return f.SomeMethodCall.Returns.SomeResult

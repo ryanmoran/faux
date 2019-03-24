@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"go/format"
 	"go/token"
 	"log"
@@ -66,12 +67,7 @@ Flags:
 			panic(err)
 		}
 	} else {
-		source, err := os.Open(options.File)
-		if err != nil {
-			stderr.Fatalf("could not open source file: %s", err)
-		}
-
-		fake, err = gen.ParseFile(options.File, source, options.Interface)
+		fake, err = gen.ParseFile(options.File, options.Interface)
 		if err != nil {
 			stderr.Fatal(err)
 		}
@@ -96,6 +92,7 @@ Flags:
 
 	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
 	if err != nil {
+		fmt.Printf("result -> %s\n", buffer.Bytes())
 		stderr.Fatalf("could not process imports: %s", err)
 	}
 

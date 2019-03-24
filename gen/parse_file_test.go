@@ -1,8 +1,6 @@
 package gen_test
 
 import (
-	"strings"
-
 	"github.com/ryanmoran/faux/gen"
 
 	. "github.com/onsi/ginkgo"
@@ -11,26 +9,14 @@ import (
 
 var _ = Describe("ParseFile", func() {
 	It("parses the given file, returning a fake matching the given named interface", func() {
-		source := strings.NewReader(`package main
-
-import (
-  "bytes"
-	"io"
-)
-
-type SomeInterface interface{
-	SomeMethod(someParam1 string, someParam2 *bytes.Buffer) (someResult1 int, someResult2 io.Reader)
-}
-`)
-
-		fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
+		fake, err := gen.ParseFile("./fixtures/interfaces.go", "FullInterface")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fake).To(Equal(gen.Fake{
-			Name: "SomeInterface",
+			Name: "FullInterface",
 			Methods: []gen.Method{
 				{
 					Name:     "SomeMethod",
-					Receiver: "SomeInterface",
+					Receiver: "FullInterface",
 					Params: []gen.Argument{
 						{
 							Method: "SomeMethod",
@@ -62,26 +48,14 @@ type SomeInterface interface{
 
 	Context("when the fields are unnamed", func() {
 		It("parses the given file, returning a fake matching the given named interface", func() {
-			source := strings.NewReader(`package main
-
-import (
-  "bytes"
-	"io"
-)
-
-type SomeInterface interface{
-	SomeMethod(string, *bytes.Buffer) (int, io.Reader)
-}
-`)
-
-			fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
+			fake, err := gen.ParseFile("./fixtures/interfaces.go", "UnnamedFieldsInterface")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fake).To(Equal(gen.Fake{
-				Name: "SomeInterface",
+				Name: "UnnamedFieldsInterface",
 				Methods: []gen.Method{
 					{
 						Name:     "SomeMethod",
-						Receiver: "SomeInterface",
+						Receiver: "UnnamedFieldsInterface",
 						Params: []gen.Argument{
 							{
 								Method: "SomeMethod",
@@ -114,23 +88,14 @@ type SomeInterface interface{
 
 	Context("when the types are elided", func() {
 		It("parses the given file, returning a fake matching the given named interface", func() {
-			source := strings.NewReader(`package main
-
-import "io"
-
-type SomeInterface interface{
-	SomeMethod(someParam1, someParam2 string) (int, io.Reader)
-}
-`)
-
-			fake, err := gen.ParseFile("some-file.go", source, "SomeInterface")
+			fake, err := gen.ParseFile("./fixtures/interfaces.go", "ElidedTypesInterface")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fake).To(Equal(gen.Fake{
-				Name: "SomeInterface",
+				Name: "ElidedTypesInterface",
 				Methods: []gen.Method{
 					{
 						Name:     "SomeMethod",
-						Receiver: "SomeInterface",
+						Receiver: "ElidedTypesInterface",
 						Params: []gen.Argument{
 							{
 								Method: "SomeMethod",
@@ -161,20 +126,27 @@ type SomeInterface interface{
 		})
 	})
 
-	Context("failure cases", func() {
-		Context("when the source file cannot be parsed", func() {
-			It("returns an error", func() {
-				source := strings.NewReader("%%%")
-				_, err := gen.ParseFile("some-file.go", source, "SomeInterface")
-				Expect(err).To(MatchError("could not parse source: some-file.go:1:1: expected 'package', found '%'"))
-			})
+	Context("when the interface is unexported", func() {
+		It("parses the given file, returning a fake matching the given named interface", func() {
+			fake, err := gen.ParseFile("./fixtures/interfaces.go", "unexportedInterface")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fake).To(Equal(gen.Fake{
+				Name: "UnexportedInterface",
+				Methods: []gen.Method{
+					{
+						Name:     "SomeMethod",
+						Receiver: "UnexportedInterface",
+					},
+				},
+			}))
 		})
+	})
 
+	Context("failure cases", func() {
 		Context("when the given interface name cannot be found", func() {
 			It("returns an error", func() {
-				source := strings.NewReader("package main")
-				_, err := gen.ParseFile("some-file.go", source, "SomeInterface")
-				Expect(err).To(MatchError("could not find interface \"SomeInterface\" in some-file.go"))
+				_, err := gen.ParseFile("./fixtures/interfaces.go", "UndefinedInterface")
+				Expect(err).To(MatchError(ContainSubstring("could not find interface \"UndefinedInterface\"")))
 			})
 		})
 	})

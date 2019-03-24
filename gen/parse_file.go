@@ -3,41 +3,18 @@ package gen
 import (
 	"fmt"
 	"go/ast"
-	"go/importer"
-	"go/parser"
-	"go/token"
 	"go/types"
-	"io"
+	"path/filepath"
+	"strings"
 )
 
-func ParseFile(filename string, source io.Reader, name string) (Fake, error) {
-	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, filename, source, 0)
-	if err != nil {
-		return Fake{}, fmt.Errorf("could not parse source: %s", err)
-	}
-
-	info := types.Info{
-		Types: make(map[ast.Expr]types.TypeAndValue),
-		Defs:  make(map[*ast.Ident]types.Object),
-		Uses:  make(map[*ast.Ident]types.Object),
-	}
-
-	conf := types.Config{Importer: importer.Default()}
-	_, err = conf.Check("banana", fset, []*ast.File{file}, &info)
+func ParseFile(filename string, name string) (Fake, error) {
+	filename, err := filepath.Abs(filename)
 	if err != nil {
 		panic(err)
 	}
 
-	fake, found, err := parse(name, info.Types, file)
-	if err != nil {
-		panic(err)
-	}
-	if !found {
-		return Fake{}, fmt.Errorf("could not find interface %q in %s", name, filename)
-	}
-
-	return fake, nil
+	return ParsePackage(filepath.Dir(filename), name)
 }
 
 func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast.File) (Fake, bool, error) {
@@ -49,6 +26,7 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 						if interfaceType, ok := typeSpec.Type.(*ast.InterfaceType); ok {
 							if typeSpec.Name.Name == name {
 								var methods []Method
+								fakeName := strings.Title(typeSpec.Name.Name)
 
 								for _, field := range interfaceType.Methods.List {
 									if funcType, ok := field.Type.(*ast.FuncType); ok {
@@ -56,7 +34,7 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 
 										methods = append(methods, Method{
 											Name:     methodName,
-											Receiver: typeSpec.Name.Name,
+											Receiver: fakeName,
 											Params:   parseArguments(methodName, typesInfo, funcType.Params),
 											Results:  parseArguments(methodName, typesInfo, funcType.Results),
 										})
@@ -64,7 +42,7 @@ func parse(name string, typesInfo map[ast.Expr]types.TypeAndValue, files ...*ast
 								}
 
 								return Fake{
-									Name:    typeSpec.Name.Name,
+									Name:    fakeName,
 									Methods: methods,
 								}, true, nil
 							}

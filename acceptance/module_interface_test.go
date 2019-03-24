@@ -34,12 +34,12 @@ var _ = Describe("faux", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("when the interface is a gopath package reference", func() {
+	Context("when the interface contains a module package reference", func() {
 		It("generates a fake", func() {
 			command := exec.Command(executable,
+				"--file", "fixtures/interfaces.go",
 				"--output", outputFile,
-				"--package", "github.com/pivotal-cf/jhanda",
-				"--interface", "Command")
+				"--interface", "ModuleInterface")
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -48,7 +48,7 @@ var _ = Describe("faux", func() {
 			outputContent, err := ioutil.ReadFile(outputFile)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedContent, err := ioutil.ReadFile("fixtures/fakes/jhanda_command.go")
+			expectedContent, err := ioutil.ReadFile("fixtures/fakes/module_interface.go")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
