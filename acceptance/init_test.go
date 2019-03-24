@@ -1,4 +1,4 @@
-package main_test
+package acceptance_test
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 
 func TestFaux(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "faux")
+	RunSpecs(t, "acceptance")
 }
 
 var (
