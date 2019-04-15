@@ -78,7 +78,7 @@ Flags:
 		stderr.Fatalf("could not create directory: %s", err)
 	}
 
-	output, err := os.OpenFile(options.Output, os.O_RDWR|os.O_CREATE, 0644)
+	output, err := os.OpenFile(options.Output, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		stderr.Fatalf("could not create output file: %s", err)
 	}
