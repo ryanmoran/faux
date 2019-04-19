@@ -42,10 +42,28 @@ var _ = Describe("Argument", func() {
 				Names: []*ast.Ident{ast.NewIdent("SomeName")},
 				Type:  ast.NewIdent("SomeType"),
 			}, "SomeMethod", fakeType, "fallbackName")).To(Equal(gen.Argument{
-				Method: "SomeMethod",
-				Name:   "someName",
-				Type:   "SomeType",
+				Method:   "SomeMethod",
+				Name:     "someName",
+				Type:     "SomeType",
+				Variadic: false,
 			}))
+		})
+
+		Context("when the argument is variadic", func() {
+			It("creates a variadic argument", func() {
+				fakeType := &FakeType{}
+				fakeType.StringCall.Returns.String = "[]SomeType"
+
+				Expect(gen.NewArgument("", &ast.Field{
+					Names: []*ast.Ident{ast.NewIdent("SomeName")},
+					Type:  &ast.Ellipsis{Elt: ast.NewIdent("SomeType")},
+				}, "SomeMethod", fakeType, "fallbackName")).To(Equal(gen.Argument{
+					Method:   "SomeMethod",
+					Name:     "someName",
+					Type:     "[]SomeType",
+					Variadic: true,
+				}))
+			})
 		})
 	})
 })

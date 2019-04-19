@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"go/format"
 	"go/token"
 	"log"
@@ -92,7 +91,6 @@ Flags:
 
 	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
 	if err != nil {
-		fmt.Printf("result -> %s\n", buffer.Bytes())
 		stderr.Fatalf("could not process imports: %s", err)
 	}
 

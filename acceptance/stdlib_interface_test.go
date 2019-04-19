@@ -51,7 +51,7 @@ var _ = Describe("faux", func() {
 			expectedContent, err := ioutil.ReadFile("fixtures/fakes/io_reader.go")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(string(outputContent)).To(Equal(string(expectedContent)))
+			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
 		})
 	})
 })

@@ -14,5 +14,4 @@ type ModuleInterface struct {
 func (f *ModuleInterface) SomeMethod(usage jhanda.Usage) {
 	f.SomeMethodCall.CallCount++
 	f.SomeMethodCall.Receives.Usage = usage
-	return
 }

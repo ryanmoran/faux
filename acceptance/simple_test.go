@@ -42,7 +42,7 @@ var _ = Describe("faux", func() {
 
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(0))
+		Eventually(session, "10s").Should(gexec.Exit(0))
 
 		outputContent, err := ioutil.ReadFile(outputFile)
 		Expect(err).NotTo(HaveOccurred())
@@ -50,7 +50,7 @@ var _ = Describe("faux", func() {
 		expectedContent, err := ioutil.ReadFile("fixtures/fakes/simple_interface.go")
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(string(outputContent)).To(Equal(string(expectedContent)))
+		Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
 	})
 
 	Context("when the source file is provided via an environment variable", func() {
@@ -62,7 +62,7 @@ var _ = Describe("faux", func() {
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(0))
+			Eventually(session, "10s").Should(gexec.Exit(0))
 
 			outputContent, err := ioutil.ReadFile(outputFile)
 			Expect(err).NotTo(HaveOccurred())
@@ -70,7 +70,7 @@ var _ = Describe("faux", func() {
 			expectedContent, err := ioutil.ReadFile("fixtures/fakes/simple_interface.go")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(string(outputContent)).To(Equal(string(expectedContent)))
+			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
 		})
 	})
 })

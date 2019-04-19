@@ -73,7 +73,19 @@ func (m Method) FieldStruct() *ast.Field {
 func (m Method) MethodDeclaration() *ast.FuncDecl {
 	var params, results []*ast.Field
 	for _, argument := range m.Params {
-		params = append(params, argument.Field(false))
+		var argType ast.Expr = ast.NewIdent(argument.Type)
+		if argument.Variadic {
+			argType = &ast.Ellipsis{
+				Elt: argType,
+			}
+		}
+
+		params = append(params, &ast.Field{
+			Names: []*ast.Ident{
+				ast.NewIdent(argument.Name),
+			},
+			Type: argType,
+		})
 	}
 
 	for _, argument := range m.Results {
@@ -104,9 +116,11 @@ func (m Method) MethodDeclaration() *ast.FuncDecl {
 		returnValues = append(returnValues, argument.ReturnValue())
 	}
 
-	statements = append(statements, &ast.ReturnStmt{
-		Results: returnValues,
-	})
+	if len(returnValues) > 0 {
+		statements = append(statements, &ast.ReturnStmt{
+			Results: returnValues,
+		})
+	}
 
 	return &ast.FuncDecl{
 		Recv: &ast.FieldList{

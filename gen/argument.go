@@ -10,9 +10,10 @@ import (
 )
 
 type Argument struct {
-	Method string
-	Name   string
-	Type   string
+	Method   string
+	Name     string
+	Type     string
+	Variadic bool
 }
 
 func NewArgument(fieldName string, field *ast.Field, method string, fieldType types.Type, name string) Argument {
@@ -24,12 +25,21 @@ func NewArgument(fieldName string, field *ast.Field, method string, fieldType ty
 		name = fieldName
 	}
 
+	var variadic bool
+	if _, ok := field.Type.(*ast.Ellipsis); ok {
+		variadic = true
+		if slice, ok := fieldType.(*types.Slice); ok {
+			fieldType = slice.Elem()
+		}
+	}
+
 	return Argument{
 		Method: method,
 		Name:   strcase.ToLowerCamel(name),
 		Type: types.TypeString(fieldType, func(p *types.Package) string {
 			return p.Name()
 		}),
+		Variadic: variadic,
 	}
 }
 
@@ -39,11 +49,18 @@ func (a Argument) Field(titleized bool) *ast.Field {
 		name = strings.Title(a.Name)
 	}
 
+	var fieldType ast.Expr = ast.NewIdent(a.Type)
+	if a.Variadic {
+		fieldType = &ast.ArrayType{
+			Elt: fieldType,
+		}
+	}
+
 	return &ast.Field{
 		Names: []*ast.Ident{
 			ast.NewIdent(name),
 		},
-		Type: ast.NewIdent(a.Type),
+		Type: fieldType,
 	}
 }
 

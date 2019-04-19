@@ -9,6 +9,7 @@ import (
 
 type SimpleInterface interface {
 	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
+	VariadicMethod(someParams ...int)
 }
 
 type ModuleInterface interface {
