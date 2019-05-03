@@ -53,6 +53,48 @@ var _ = Describe("faux", func() {
 		Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
 	})
 
+	Context("when there are chan arguments", func() {
+		It("generates a fake", func() {
+			command := exec.Command(executable,
+				"--file", "./fixtures/interfaces.go",
+				"--output", outputFile,
+				"--interface", "ChanInterface")
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, "10s").Should(gexec.Exit(0))
+
+			outputContent, err := ioutil.ReadFile(outputFile)
+			Expect(err).NotTo(HaveOccurred())
+
+			expectedContent, err := ioutil.ReadFile("fixtures/fakes/chan_interface.go")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
+		})
+	})
+
+	Context("when there are duplicate arguments", func() {
+		It("generates a fake", func() {
+			command := exec.Command(executable,
+				"--file", "./fixtures/interfaces.go",
+				"--output", outputFile,
+				"--interface", "DuplicateArgumentInterface")
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session, "10s").Should(gexec.Exit(0))
+
+			outputContent, err := ioutil.ReadFile(outputFile)
+			Expect(err).NotTo(HaveOccurred())
+
+			expectedContent, err := ioutil.ReadFile("fixtures/fakes/duplicate_argument_interface.go")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
+		})
+	})
+
 	Context("when the source file is provided via an environment variable", func() {
 		It("generates a fake", func() {
 			command := exec.Command(executable,

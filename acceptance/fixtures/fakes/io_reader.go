@@ -13,8 +13,8 @@ type Reader struct {
 	}
 }
 
-func (f *Reader) Read(p []byte) (int, error) {
+func (f *Reader) Read(param1 []byte) (int, error) {
 	f.ReadCall.CallCount++
-	f.ReadCall.Receives.P = p
+	f.ReadCall.Receives.P = param1
 	return f.ReadCall.Returns.N, f.ReadCall.Returns.Err
 }

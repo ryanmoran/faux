@@ -23,12 +23,12 @@ type SimpleInterface struct {
 	}
 }
 
-func (f *SimpleInterface) SomeMethod(someParam *bytes.Buffer) io.Reader {
+func (f *SimpleInterface) SomeMethod(param1 *bytes.Buffer) io.Reader {
 	f.SomeMethodCall.CallCount++
-	f.SomeMethodCall.Receives.SomeParam = someParam
+	f.SomeMethodCall.Receives.SomeParam = param1
 	return f.SomeMethodCall.Returns.SomeResult
 }
-func (f *SimpleInterface) VariadicMethod(someParams ...int) {
+func (f *SimpleInterface) VariadicMethod(param1 ...int) {
 	f.VariadicMethodCall.CallCount++
-	f.VariadicMethodCall.Receives.SomeParams = someParams
+	f.VariadicMethodCall.Receives.SomeParams = param1
 }

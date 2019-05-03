@@ -11,7 +11,7 @@ type ModuleInterface struct {
 	}
 }
 
-func (f *ModuleInterface) SomeMethod(usage jhanda.Usage) {
+func (f *ModuleInterface) SomeMethod(param1 jhanda.Usage) {
 	f.SomeMethodCall.CallCount++
-	f.SomeMethodCall.Receives.Usage = usage
+	f.SomeMethodCall.Receives.Usage = param1
 }

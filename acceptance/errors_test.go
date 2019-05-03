@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -58,7 +59,11 @@ var _ = Describe("faux", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 
-				Expect(string(session.Err.Contents())).To(ContainSubstring("could not find interface \"SimpleInterface\""))
+				path, err := filepath.Abs("./fixtures/garbage")
+				Expect(err).NotTo(HaveOccurred())
+
+				message := fmt.Sprintf("failed to find named type: %s.SimpleInterface", path)
+				Expect(string(session.Err.Contents())).To(ContainSubstring(message))
 			})
 		})
 

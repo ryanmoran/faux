@@ -1,4 +1,4 @@
-package gen
+package rendering
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestGen(t *testing.T) {
+func TestRendering(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "gen")
+	RunSpecs(t, "rendering")
 }

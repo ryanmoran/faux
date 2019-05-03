@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf/jhanda"
-	"github.com/ryanmoran/faux/gen"
+	"github.com/ryanmoran/faux/parsing"
+	"github.com/ryanmoran/faux/rendering"
 	"golang.org/x/tools/imports"
 )
 
@@ -58,18 +59,18 @@ Flags:
 		os.Exit(0)
 	}
 
-	var fake gen.Fake
-	if options.Package != "" {
-		var err error
-		fake, err = gen.ParsePackage(options.Package, options.Interface)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		fake, err = gen.ParseFile(options.File, options.Interface)
+	if options.Package == "" {
+		path, err := filepath.Abs(options.File)
 		if err != nil {
 			stderr.Fatal(err)
 		}
+
+		options.Package = filepath.Dir(path)
+	}
+
+	iface, err := parsing.Parse(options.Package, options.Interface)
+	if err != nil {
+		stderr.Fatal(err)
 	}
 
 	err = os.MkdirAll(filepath.Dir(options.Output), 0755)
@@ -84,14 +85,16 @@ Flags:
 	defer output.Close()
 
 	buffer := bytes.NewBuffer([]byte{})
-	err = format.Node(buffer, token.NewFileSet(), gen.Build(fake))
+	tree := rendering.Build(iface).AST()
+
+	err = format.Node(buffer, token.NewFileSet(), tree)
 	if err != nil {
 		stderr.Fatalf("could not format fake ast: %s", err)
 	}
 
 	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
 	if err != nil {
-		stderr.Fatalf("could not process imports: %s", err)
+		stderr.Fatalf("could not process imports: %s\n\n%s", err, buffer.String())
 	}
 
 	_, err = output.Write(result)

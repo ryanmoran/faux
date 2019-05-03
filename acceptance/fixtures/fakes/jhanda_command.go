@@ -20,9 +20,9 @@ type Command struct {
 	}
 }
 
-func (f *Command) Execute(args []string) error {
+func (f *Command) Execute(param1 []string) error {
 	f.ExecuteCall.CallCount++
-	f.ExecuteCall.Receives.Args = args
+	f.ExecuteCall.Receives.Args = param1
 	return f.ExecuteCall.Returns.Error
 }
 func (f *Command) Usage() jhanda.Usage {
