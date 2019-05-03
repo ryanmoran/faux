@@ -30,6 +30,7 @@ func BuildFakeType(iface parsing.Interface) NamedType {
 func BuildCallStruct(signature parsing.Signature) Field {
 	methodCallName := fmt.Sprintf("%sCall", signature.Name)
 	var fields []Field
+	fields = append(fields, BuildMutex())
 	fields = append(fields, BuildCallCount())
 
 	if len(signature.Params) > 0 {
@@ -41,6 +42,10 @@ func BuildCallStruct(signature parsing.Signature) Field {
 	}
 
 	return NewField(methodCallName, NewStruct(fields))
+}
+
+func BuildMutex() Field {
+	return NewField("", NewNamedType("sync.Mutex", NewStruct(nil)))
 }
 
 func BuildCallCount() Field {
@@ -106,6 +111,8 @@ func BuildResults(args []parsing.Argument) []Result {
 
 func BuildBody(receiver Receiver, signature parsing.Signature) []Statement {
 	statements := []Statement{
+		BuildMutexLockStatement(receiver, signature.Name),
+		BuildMutexUnlockStatement(receiver, signature.Name),
 		BuildIncrementStatement(receiver, signature.Name),
 	}
 
@@ -118,6 +125,24 @@ func BuildBody(receiver Receiver, signature parsing.Signature) []Statement {
 	}
 
 	return statements
+}
+
+func BuildMutexLockStatement(receiver Receiver, name string) CallStatement {
+	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
+	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
+	call := NewCall("Lock")
+	selector := NewSelector(receiver, callField, call)
+
+	return NewCallStatement(selector)
+}
+
+func BuildMutexUnlockStatement(receiver Receiver, name string) DeferStatement {
+	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
+	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
+	call := NewCall("Unlock")
+	selector := NewSelector(receiver, callField, call)
+
+	return NewDeferStatement(selector)
 }
 
 func BuildIncrementStatement(receiver Receiver, name string) IncrementStatement {

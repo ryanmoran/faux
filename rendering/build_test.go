@@ -53,10 +53,19 @@ var _ = Describe("Build", func() {
 			Expect(field.Name).To(Equal("ReadCall"))
 
 			fieldStruct := field.Type.(rendering.Struct)
-			Expect(fieldStruct.Fields).To(HaveLen(3))
+			Expect(fieldStruct.Fields).To(HaveLen(4))
+
+			By("checking the ReadCall.Mutex field", func() {
+				field := fieldStruct.Fields[0]
+				Expect(field.Name).To(Equal(""))
+				Expect(field.Type).To(Equal(rendering.NamedType{
+					Name: "sync.Mutex",
+					Type: rendering.Struct{},
+				}))
+			})
 
 			By("checking the ReadCall.CallCount field", func() {
-				field := fieldStruct.Fields[0]
+				field := fieldStruct.Fields[1]
 				Expect(field.Name).To(Equal("CallCount"))
 				Expect(field.Type).To(Equal(rendering.BasicType{
 					Underlying: rendering.BasicInt,
@@ -64,7 +73,7 @@ var _ = Describe("Build", func() {
 			})
 
 			By("checking the ReadCall.Receives field", func() {
-				field := fieldStruct.Fields[1]
+				field := fieldStruct.Fields[2]
 				Expect(field.Name).To(Equal("Receives"))
 
 				fieldStruct := field.Type.(rendering.Struct)
@@ -82,7 +91,7 @@ var _ = Describe("Build", func() {
 			})
 
 			By("checking the ReadCall.Returns field", func() {
-				field := fieldStruct.Fields[2]
+				field := fieldStruct.Fields[3]
 				Expect(field.Name).To(Equal("Returns"))
 
 				fieldStruct := field.Type.(rendering.Struct)
@@ -149,10 +158,30 @@ var _ = Describe("Build", func() {
 			})
 
 			By("checking the Read body", func() {
-				Expect(function.Body).To(HaveLen(3))
+				Expect(function.Body).To(HaveLen(5))
+
+				By("checking the ReadCall.Mutex.Lock call", func() {
+					statement := function.Body[0].(rendering.CallStatement)
+					selector := statement.Elem.(rendering.Selector)
+
+					Expect(selector.Parts).To(HaveLen(3))
+					Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+					Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
+					Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Lock"))
+				})
+
+				By("checking the defered ReadCall.Mutex.Unlock call", func() {
+					statement := function.Body[1].(rendering.DeferStatement)
+					selector := statement.Elem.(rendering.Selector)
+
+					Expect(selector.Parts).To(HaveLen(3))
+					Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+					Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
+					Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Unlock"))
+				})
 
 				By("checking the ReadCall.CallCount increment statement", func() {
-					statement := function.Body[0].(rendering.IncrementStatement)
+					statement := function.Body[2].(rendering.IncrementStatement)
 					selector := statement.Elem.(rendering.Selector)
 
 					Expect(selector.Parts).To(HaveLen(3))
@@ -162,7 +191,7 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the ReadCall.Receives.P assign statement", func() {
-					statement := function.Body[1].(rendering.AssignStatement)
+					statement := function.Body[3].(rendering.AssignStatement)
 					selector := statement.Left.(rendering.Selector)
 					param := statement.Right.(rendering.Param)
 
@@ -176,7 +205,7 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the ReadCall return statement", func() {
-					statement := function.Body[2].(rendering.ReturnStatement)
+					statement := function.Body[4].(rendering.ReturnStatement)
 
 					Expect(statement.Results).To(HaveLen(2))
 
@@ -240,10 +269,19 @@ var _ = Describe("Build", func() {
 				Expect(field.Name).To(Equal("MethodCall"))
 
 				fieldStruct := field.Type.(rendering.Struct)
-				Expect(fieldStruct.Fields).To(HaveLen(3))
+				Expect(fieldStruct.Fields).To(HaveLen(4))
+
+				By("checking the MethodCall.Mutex field", func() {
+					field := fieldStruct.Fields[0]
+					Expect(field.Name).To(Equal(""))
+					Expect(field.Type).To(Equal(rendering.NamedType{
+						Name: "sync.Mutex",
+						Type: rendering.Struct{},
+					}))
+				})
 
 				By("checking the MethodCall.CallCount field", func() {
-					field := fieldStruct.Fields[0]
+					field := fieldStruct.Fields[1]
 					Expect(field.Name).To(Equal("CallCount"))
 					Expect(field.Type).To(Equal(rendering.BasicType{
 						Underlying: rendering.BasicInt,
@@ -251,7 +289,7 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the MethodCall.Receives field", func() {
-					field := fieldStruct.Fields[1]
+					field := fieldStruct.Fields[2]
 					Expect(field.Name).To(Equal("Receives"))
 
 					fieldStruct := field.Type.(rendering.Struct)
@@ -269,7 +307,7 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the MethodCall.Returns field", func() {
-					field := fieldStruct.Fields[2]
+					field := fieldStruct.Fields[3]
 					Expect(field.Name).To(Equal("Returns"))
 
 					fieldStruct := field.Type.(rendering.Struct)
@@ -317,10 +355,30 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the Method body", func() {
-					Expect(function.Body).To(HaveLen(3))
+					Expect(function.Body).To(HaveLen(5))
+
+					By("checking the MethodCall.Mutex.Lock call", func() {
+						statement := function.Body[0].(rendering.CallStatement)
+						selector := statement.Elem.(rendering.Selector)
+
+						Expect(selector.Parts).To(HaveLen(3))
+						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
+						Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Lock"))
+					})
+
+					By("checking the defered MethodCall.Mutex.Unlock call", func() {
+						statement := function.Body[1].(rendering.DeferStatement)
+						selector := statement.Elem.(rendering.Selector)
+
+						Expect(selector.Parts).To(HaveLen(3))
+						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
+						Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Unlock"))
+					})
 
 					By("checking the MethodCall.CallCount increment statement", func() {
-						statement := function.Body[0].(rendering.IncrementStatement)
+						statement := function.Body[2].(rendering.IncrementStatement)
 						selector := statement.Elem.(rendering.Selector)
 
 						Expect(selector.Parts).To(HaveLen(3))
@@ -330,7 +388,7 @@ var _ = Describe("Build", func() {
 					})
 
 					By("checking the MethodCall.Receives.ByteSlice assign statement", func() {
-						statement := function.Body[1].(rendering.AssignStatement)
+						statement := function.Body[3].(rendering.AssignStatement)
 						selector := statement.Left.(rendering.Selector)
 						param := statement.Right.(rendering.Param)
 
@@ -344,7 +402,7 @@ var _ = Describe("Build", func() {
 					})
 
 					By("checking the MethodCall return statement", func() {
-						statement := function.Body[2].(rendering.ReturnStatement)
+						statement := function.Body[4].(rendering.ReturnStatement)
 
 						Expect(statement.Results).To(HaveLen(1))
 
