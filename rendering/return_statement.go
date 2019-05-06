@@ -3,10 +3,10 @@ package rendering
 import "go/ast"
 
 type ReturnStatement struct {
-	Results []Type
+	Results []Expression
 }
 
-func NewReturnStatement(results []Type) ReturnStatement {
+func NewReturnStatement(results ...Expression) ReturnStatement {
 	return ReturnStatement{
 		Results: results,
 	}

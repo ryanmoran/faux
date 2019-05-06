@@ -16,13 +16,7 @@ type SimpleInterface struct {
 		Returns struct {
 			SomeResult io.Reader
 		}
-	}
-	VariadicMethodCall struct {
-		sync.Mutex
-		CallCount int
-		Receives  struct {
-			SomeParams []int
-		}
+		Stub func(*bytes.Buffer) io.Reader
 	}
 }
 
@@ -31,11 +25,8 @@ func (f *SimpleInterface) SomeMethod(param1 *bytes.Buffer) io.Reader {
 	defer f.SomeMethodCall.Unlock()
 	f.SomeMethodCall.CallCount++
 	f.SomeMethodCall.Receives.SomeParam = param1
+	if f.SomeMethodCall.Stub != nil {
+		return f.SomeMethodCall.Stub(param1)
+	}
 	return f.SomeMethodCall.Returns.SomeResult
-}
-func (f *SimpleInterface) VariadicMethod(param1 ...int) {
-	f.VariadicMethodCall.Lock()
-	defer f.VariadicMethodCall.Unlock()
-	f.VariadicMethodCall.CallCount++
-	f.VariadicMethodCall.Receives.SomeParams = param1
 }

@@ -21,6 +21,8 @@ func (nt NamedType) Expr() ast.Expr {
 	return ast.NewIdent(nt.Name)
 }
 
+func (nt NamedType) isType() {}
+
 func (nt NamedType) Decl() ast.Decl {
 	return &ast.GenDecl{
 		Tok: token.TYPE,

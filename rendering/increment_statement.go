@@ -6,18 +6,18 @@ import (
 )
 
 type IncrementStatement struct {
-	Elem Type
+	X Expression
 }
 
-func NewIncrementStatement(elem Type) IncrementStatement {
+func NewIncrementStatement(expr Expression) IncrementStatement {
 	return IncrementStatement{
-		Elem: elem,
+		X: expr,
 	}
 }
 
 func (is IncrementStatement) Stmt() ast.Stmt {
 	return &ast.IncDecStmt{
-		X:   is.Elem.Expr(),
+		X:   is.X.Expr(),
 		Tok: token.INC,
 	}
 }

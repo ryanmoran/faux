@@ -17,3 +17,5 @@ func (p Pointer) Expr() ast.Expr {
 		X: p.Elem.Expr(),
 	}
 }
+
+func (p Pointer) isType() {}

@@ -20,3 +20,5 @@ func (m Map) Expr() ast.Expr {
 		Value: m.Elem.Expr(),
 	}
 }
+
+func (m Map) isType() {}

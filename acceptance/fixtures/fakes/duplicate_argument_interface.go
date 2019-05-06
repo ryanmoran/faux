@@ -16,6 +16,7 @@ type DuplicateArgumentInterface struct {
 			Int_1  int
 			Int_2  int
 		}
+		Stub func(string, string, int) (string, int, int)
 	}
 }
 
@@ -26,5 +27,8 @@ func (f *DuplicateArgumentInterface) Duplicates(param1 string, param2 string, pa
 	f.DuplicatesCall.Receives.String_1 = param1
 	f.DuplicatesCall.Receives.String_2 = param2
 	f.DuplicatesCall.Receives.Int = param3
+	if f.DuplicatesCall.Stub != nil {
+		return f.DuplicatesCall.Stub(param1, param2, param3)
+	}
 	return f.DuplicatesCall.Returns.String, f.DuplicatesCall.Returns.Int_1, f.DuplicatesCall.Returns.Int_2
 }

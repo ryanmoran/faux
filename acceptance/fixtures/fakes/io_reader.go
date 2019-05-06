@@ -13,6 +13,7 @@ type Reader struct {
 			N   int
 			Err error
 		}
+		Stub func([]byte) (int, error)
 	}
 }
 
@@ -21,5 +22,8 @@ func (f *Reader) Read(param1 []byte) (int, error) {
 	defer f.ReadCall.Unlock()
 	f.ReadCall.CallCount++
 	f.ReadCall.Receives.P = param1
+	if f.ReadCall.Stub != nil {
+		return f.ReadCall.Stub(param1)
+	}
 	return f.ReadCall.Returns.N, f.ReadCall.Returns.Err
 }

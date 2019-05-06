@@ -41,6 +41,8 @@ func BuildCallStruct(signature parsing.Signature) Field {
 		fields = append(fields, BuildReturns(signature.Results))
 	}
 
+	fields = append(fields, BuildStub(signature))
+
 	return NewField(methodCallName, NewStruct(fields))
 }
 
@@ -82,19 +84,31 @@ func BuildReturns(args []parsing.Argument) Field {
 	return NewField("Returns", NewStruct(fields))
 }
 
+func BuildStub(signature parsing.Signature) Field {
+	params := BuildParams(signature.Params, false)
+	results := BuildResults(signature.Results)
+	stub := NewFunc("", Receiver{}, params, results, nil)
+	return NewField("Stub", stub)
+}
+
 func BuildFunc(fake NamedType, signature parsing.Signature) Func {
 	receiver := NewReceiver("f", NewPointer(fake))
-	params := BuildParams(signature.Params)
+	params := BuildParams(signature.Params, true)
 	results := BuildResults(signature.Results)
 	body := BuildBody(receiver, signature)
 
 	return NewFunc(signature.Name, receiver, params, results, body)
 }
 
-func BuildParams(args []parsing.Argument) []Param {
+func BuildParams(args []parsing.Argument, named bool) []Param {
 	var params []Param
 	for i, arg := range args {
-		params = append(params, NewParam(i, NewType(arg.Type), arg.Variadic))
+		var name string
+		if named {
+			name = ParamName(i)
+		}
+
+		params = append(params, NewParam(name, NewType(arg.Type), arg.Variadic))
 	}
 
 	return params
@@ -120,6 +134,8 @@ func BuildBody(receiver Receiver, signature parsing.Signature) []Statement {
 		statements = append(statements, BuildAssignStatement(receiver, signature.Name, i, signature.Params))
 	}
 
+	statements = append(statements, BuildStubIfStatement(receiver, signature))
+
 	if len(signature.Results) > 0 {
 		statements = append(statements, BuildReturnStatement(receiver, signature))
 	}
@@ -130,19 +146,17 @@ func BuildBody(receiver Receiver, signature parsing.Signature) []Statement {
 func BuildMutexLockStatement(receiver Receiver, name string) CallStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
-	call := NewCall("Lock")
-	selector := NewSelector(receiver, callField, call)
+	selector := NewSelector(receiver, callField, NewIdent("Lock"))
 
-	return NewCallStatement(selector)
+	return NewCallStatement(NewCall(selector))
 }
 
 func BuildMutexUnlockStatement(receiver Receiver, name string) DeferStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
-	call := NewCall("Unlock")
-	selector := NewSelector(receiver, callField, call)
+	selector := NewSelector(receiver, callField, NewIdent("Unlock"))
 
-	return NewDeferStatement(selector)
+	return NewDeferStatement(NewCall(selector))
 }
 
 func BuildIncrementStatement(receiver Receiver, name string) IncrementStatement {
@@ -167,9 +181,30 @@ func BuildAssignStatement(receiver Receiver, name string, index int, args []pars
 
 	paramField := receivesField.Type.(Struct).FieldWithName(argName)
 	selector := NewSelector(receiver, callField, receivesField, paramField)
-	param := NewParam(index, NewType(arg.Type), arg.Variadic)
+	paramName := ParamName(index)
+	param := NewParam(paramName, NewType(arg.Type), arg.Variadic)
 
 	return NewAssignStatement(selector, param)
+}
+
+func BuildStubIfStatement(receiver Receiver, signature parsing.Signature) IfStatement {
+	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
+	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", signature.Name))
+	stubField := callField.Type.(Struct).FieldWithName("Stub")
+	selector := NewSelector(receiver, callField, stubField)
+
+	params := BuildParams(signature.Params, true)
+
+	condition := NewEquality(false, selector, NewNil())
+	var body []Statement
+
+	if len(signature.Results) > 0 {
+		body = append(body, NewReturnStatement(NewCall(selector, params...)))
+	} else {
+		body = append(body, NewCallStatement(NewCall(selector, params...)))
+	}
+
+	return NewIfStatement(condition, body)
 }
 
 func BuildReturnStatement(receiver Receiver, signature parsing.Signature) ReturnStatement {
@@ -177,7 +212,7 @@ func BuildReturnStatement(receiver Receiver, signature parsing.Signature) Return
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", signature.Name))
 	returnsField := callField.Type.(Struct).FieldWithName("Returns")
 
-	var results []Type
+	var results []Expression
 	for i, arg := range signature.Results {
 		argName := arg.Name
 		if argName == "" {
@@ -189,5 +224,5 @@ func BuildReturnStatement(receiver Receiver, signature parsing.Signature) Return
 		results = append(results, selector)
 	}
 
-	return NewReturnStatement(results)
+	return NewReturnStatement(results...)
 }

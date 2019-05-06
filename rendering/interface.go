@@ -9,3 +9,5 @@ func (i Interface) Expr() ast.Expr {
 		Methods: &ast.FieldList{},
 	}
 }
+
+func (i Interface) isType() {}

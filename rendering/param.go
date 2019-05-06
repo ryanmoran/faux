@@ -1,7 +1,6 @@
 package rendering
 
 import (
-	"fmt"
 	"go/ast"
 )
 
@@ -11,9 +10,9 @@ type Param struct {
 	Variadic bool
 }
 
-func NewParam(index int, t Type, variadic bool) Param {
+func NewParam(name string, t Type, variadic bool) Param {
 	return Param{
-		Name:     fmt.Sprintf("param%d", index+1),
+		Name:     name,
 		Type:     t,
 		Variadic: variadic,
 	}

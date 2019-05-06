@@ -27,8 +27,8 @@ var (
 	BasicRune       = BasicLookup("rune")
 )
 
-func BasicLookup(t string) types.Type {
-	return types.Universe.Lookup(t).Type()
+func BasicLookup(name string) types.Type {
+	return types.Universe.Lookup(name).Type()
 }
 
 type BasicType struct {
@@ -44,3 +44,5 @@ func NewBasicType(t types.Type) Type {
 func (bt BasicType) Expr() ast.Expr {
 	return ast.NewIdent(bt.Underlying.String())
 }
+
+func (bt BasicType) isType() {}

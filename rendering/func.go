@@ -20,6 +20,31 @@ func NewFunc(name string, receiver Receiver, params []Param, results []Result, b
 	}
 }
 
+func (f Func) Expr() ast.Expr {
+	var params []*ast.Field
+	for _, param := range f.Params {
+		params = append(params, param.Field())
+	}
+
+	var results []*ast.Field
+	for _, result := range f.Results {
+		results = append(results, result.Field())
+	}
+
+	return &ast.FuncLit{
+		Type: &ast.FuncType{
+			Params: &ast.FieldList{
+				List: params,
+			},
+			Results: &ast.FieldList{
+				List: results,
+			},
+		},
+	}
+}
+
+func (f Func) isType() {}
+
 func (f Func) Decl() ast.Decl {
 	var params []*ast.Field
 	for _, param := range f.Params {

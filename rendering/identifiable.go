@@ -10,6 +10,16 @@ type Ident struct {
 	Name string
 }
 
-func (i Ident) Expr() ast.Expr {
+func NewIdent(name string) Ident {
+	return Ident{
+		Name: name,
+	}
+}
+
+func (i Ident) Ident() *ast.Ident {
 	return ast.NewIdent(i.Name)
+}
+
+func (i Ident) Expr() ast.Expr {
+	return i.Ident()
 }

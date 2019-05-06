@@ -2,12 +2,12 @@ package rendering
 
 import (
 	"fmt"
-	"go/ast"
 	"go/types"
 )
 
 type Type interface {
-	Expr() ast.Expr
+	Expression
+	isType()
 }
 
 func NewType(t types.Type) Type {

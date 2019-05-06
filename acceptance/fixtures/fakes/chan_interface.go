@@ -9,6 +9,7 @@ type ChanInterface struct {
 		Receives  struct {
 			IntChannel chan int
 		}
+		Stub func(chan int)
 	}
 }
 
@@ -17,4 +18,7 @@ func (f *ChanInterface) ChanMethod(param1 chan int) {
 	defer f.ChanMethodCall.Unlock()
 	f.ChanMethodCall.CallCount++
 	f.ChanMethodCall.Receives.IntChannel = param1
+	if f.ChanMethodCall.Stub != nil {
+		f.ChanMethodCall.Stub(param1)
+	}
 }

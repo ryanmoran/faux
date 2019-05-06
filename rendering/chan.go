@@ -18,3 +18,5 @@ func (c Chan) Expr() ast.Expr {
 		Value: c.Elem.Expr(),
 	}
 }
+
+func (c Chan) isType() {}

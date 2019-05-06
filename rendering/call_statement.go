@@ -3,19 +3,17 @@ package rendering
 import "go/ast"
 
 type CallStatement struct {
-	Elem Type
+	Call Call
 }
 
-func NewCallStatement(elem Type) CallStatement {
+func NewCallStatement(call Call) CallStatement {
 	return CallStatement{
-		Elem: elem,
+		Call: call,
 	}
 }
 
 func (cs CallStatement) Stmt() ast.Stmt {
 	return &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: cs.Elem.Expr(),
-		},
+		X: cs.Call.Expr(),
 	}
 }

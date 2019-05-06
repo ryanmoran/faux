@@ -78,3 +78,7 @@ func FieldTypeName(args []parsing.Argument, index int) string {
 
 	return typeName
 }
+
+func ParamName(index int) string {
+	return fmt.Sprintf("param%d", index+1)
+}

@@ -6,11 +6,11 @@ import (
 )
 
 type AssignStatement struct {
-	Left  Type
-	Right Type
+	Left  Expression
+	Right Expression
 }
 
-func NewAssignStatement(left, right Type) AssignStatement {
+func NewAssignStatement(left, right Expression) AssignStatement {
 	return AssignStatement{
 		Left:  left,
 		Right: right,

@@ -8,8 +8,11 @@ import (
 )
 
 type SimpleInterface interface {
-	VariadicMethod(someParams ...int)
 	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
+}
+
+type VariadicInterface interface {
+	VariadicMethod(someParams ...int)
 }
 
 type ChanInterface interface {

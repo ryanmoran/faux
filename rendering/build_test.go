@@ -53,7 +53,7 @@ var _ = Describe("Build", func() {
 			Expect(field.Name).To(Equal("ReadCall"))
 
 			fieldStruct := field.Type.(rendering.Struct)
-			Expect(fieldStruct.Fields).To(HaveLen(4))
+			Expect(fieldStruct.Fields).To(HaveLen(5))
 
 			By("checking the ReadCall.Mutex field", func() {
 				field := fieldStruct.Fields[0]
@@ -114,6 +114,47 @@ var _ = Describe("Build", func() {
 					}))
 				})
 			})
+
+			By("checking the ReadCall.Stub field", func() {
+				field := fieldStruct.Fields[4]
+				Expect(field.Name).To(Equal("Stub"))
+
+				function := field.Type.(rendering.Func)
+				Expect(function.Name).To(Equal(""))
+				Expect(function.Receiver).To(Equal(rendering.Receiver{}))
+				Expect(function.Params).To(HaveLen(1))
+				Expect(function.Results).To(HaveLen(2))
+
+				By("checking the Stub param", func() {
+					param := function.Params[0]
+
+					Expect(param.Name).To(Equal(""))
+					Expect(param.Type).To(Equal(rendering.Slice{
+						Elem: rendering.BasicType{
+							Underlying: rendering.BasicByte,
+						},
+					}))
+					Expect(param.Variadic).To(BeTrue())
+				})
+
+				By("checking the Stub results", func() {
+					result1 := function.Results[0]
+
+					Expect(result1.Type).To(Equal(rendering.BasicType{
+						Underlying: rendering.BasicInt,
+					}))
+
+					result2 := function.Results[1]
+					Expect(result2.Type).To(Equal(rendering.NamedType{
+						Name: "error",
+						Type: rendering.Interface{},
+					}))
+				})
+
+				By("checking the Read body", func() {
+					Expect(function.Body).To(HaveLen(0))
+				})
+			})
 		})
 
 		By("checking the Read func", func() {
@@ -158,31 +199,31 @@ var _ = Describe("Build", func() {
 			})
 
 			By("checking the Read body", func() {
-				Expect(function.Body).To(HaveLen(5))
+				Expect(function.Body).To(HaveLen(6))
 
 				By("checking the ReadCall.Mutex.Lock call", func() {
 					statement := function.Body[0].(rendering.CallStatement)
-					selector := statement.Elem.(rendering.Selector)
+					selector := statement.Call.X.(rendering.Selector)
 
 					Expect(selector.Parts).To(HaveLen(3))
 					Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 					Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
-					Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Lock"))
+					Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Lock"))
 				})
 
 				By("checking the defered ReadCall.Mutex.Unlock call", func() {
 					statement := function.Body[1].(rendering.DeferStatement)
-					selector := statement.Elem.(rendering.Selector)
+					selector := statement.Call.X.(rendering.Selector)
 
 					Expect(selector.Parts).To(HaveLen(3))
 					Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 					Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
-					Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Unlock"))
+					Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Unlock"))
 				})
 
 				By("checking the ReadCall.CallCount increment statement", func() {
 					statement := function.Body[2].(rendering.IncrementStatement)
-					selector := statement.Elem.(rendering.Selector)
+					selector := statement.X.(rendering.Selector)
 
 					Expect(selector.Parts).To(HaveLen(3))
 					Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
@@ -204,8 +245,39 @@ var _ = Describe("Build", func() {
 					Expect(param.Name).To(Equal("param1"))
 				})
 
+				By("checking the ReadCall stub conditional statement", func() {
+					statement := function.Body[4].(rendering.IfStatement)
+					condition := statement.Condition.(rendering.Equality)
+					Expect(condition.Equal).To(BeFalse())
+
+					left := condition.Left.(rendering.Selector)
+					Expect(left.Parts).To(HaveLen(3))
+					Expect(left.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+					Expect(left.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
+					Expect(left.Parts[2].(rendering.Field).Name).To(Equal("Stub"))
+
+					Expect(condition.Right).To(Equal(rendering.Nil{}))
+
+					By("checking the ReadCall stub conditional statement body", func() {
+						Expect(statement.Body).To(HaveLen(1))
+
+						returnStatement := statement.Body[0].(rendering.ReturnStatement)
+						Expect(returnStatement.Results).To(HaveLen(1))
+
+						call := returnStatement.Results[0].(rendering.Call)
+						selector := call.X.(rendering.Selector)
+						Expect(selector.Parts).To(HaveLen(3))
+						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
+						Expect(selector.Parts[2].(rendering.Field).Name).To(Equal("Stub"))
+
+						Expect(call.Params).To(HaveLen(1))
+						Expect(call.Params[0].Name).To(Equal("param1"))
+					})
+				})
+
 				By("checking the ReadCall return statement", func() {
-					statement := function.Body[4].(rendering.ReturnStatement)
+					statement := function.Body[5].(rendering.ReturnStatement)
 
 					Expect(statement.Results).To(HaveLen(2))
 
@@ -269,7 +341,7 @@ var _ = Describe("Build", func() {
 				Expect(field.Name).To(Equal("MethodCall"))
 
 				fieldStruct := field.Type.(rendering.Struct)
-				Expect(fieldStruct.Fields).To(HaveLen(4))
+				Expect(fieldStruct.Fields).To(HaveLen(5))
 
 				By("checking the MethodCall.Mutex field", func() {
 					field := fieldStruct.Fields[0]
@@ -321,6 +393,40 @@ var _ = Describe("Build", func() {
 						}))
 					})
 				})
+
+				By("checking the MethodCall.Stub field", func() {
+					field := fieldStruct.Fields[4]
+					Expect(field.Name).To(Equal("Stub"))
+
+					function := field.Type.(rendering.Func)
+					Expect(function.Name).To(Equal(""))
+					Expect(function.Receiver).To(Equal(rendering.Receiver{}))
+					Expect(function.Params).To(HaveLen(1))
+					Expect(function.Results).To(HaveLen(1))
+
+					By("checking the Stub param", func() {
+						param := function.Params[0]
+
+						Expect(param.Name).To(Equal(""))
+						Expect(param.Type).To(Equal(rendering.Slice{
+							Elem: rendering.BasicType{
+								Underlying: rendering.BasicByte,
+							},
+						}))
+					})
+
+					By("checking the Stub results", func() {
+						result := function.Results[0]
+
+						Expect(result.Type).To(Equal(rendering.BasicType{
+							Underlying: rendering.BasicInt,
+						}))
+					})
+
+					By("checking the Stub body", func() {
+						Expect(function.Body).To(HaveLen(0))
+					})
+				})
 			})
 
 			By("checking the Method func", func() {
@@ -355,31 +461,31 @@ var _ = Describe("Build", func() {
 				})
 
 				By("checking the Method body", func() {
-					Expect(function.Body).To(HaveLen(5))
+					Expect(function.Body).To(HaveLen(6))
 
 					By("checking the MethodCall.Mutex.Lock call", func() {
 						statement := function.Body[0].(rendering.CallStatement)
-						selector := statement.Elem.(rendering.Selector)
+						selector := statement.Call.X.(rendering.Selector)
 
 						Expect(selector.Parts).To(HaveLen(3))
 						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
-						Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Lock"))
+						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Lock"))
 					})
 
 					By("checking the defered MethodCall.Mutex.Unlock call", func() {
 						statement := function.Body[1].(rendering.DeferStatement)
-						selector := statement.Elem.(rendering.Selector)
+						selector := statement.Call.X.(rendering.Selector)
 
 						Expect(selector.Parts).To(HaveLen(3))
 						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
-						Expect(selector.Parts[2].(rendering.Call).Name).To(Equal("Unlock"))
+						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Unlock"))
 					})
 
 					By("checking the MethodCall.CallCount increment statement", func() {
 						statement := function.Body[2].(rendering.IncrementStatement)
-						selector := statement.Elem.(rendering.Selector)
+						selector := statement.X.(rendering.Selector)
 
 						Expect(selector.Parts).To(HaveLen(3))
 						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
@@ -401,8 +507,36 @@ var _ = Describe("Build", func() {
 						Expect(param.Name).To(Equal("param1"))
 					})
 
+					By("checking the MethodCall stub conditional statement", func() {
+						statement := function.Body[4].(rendering.IfStatement)
+						condition := statement.Condition.(rendering.Equality)
+						Expect(condition.Equal).To(BeFalse())
+
+						left := condition.Left.(rendering.Selector)
+						Expect(left.Parts).To(HaveLen(3))
+						Expect(left.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+						Expect(left.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
+						Expect(left.Parts[2].(rendering.Field).Name).To(Equal("Stub"))
+
+						Expect(condition.Right).To(Equal(rendering.Nil{}))
+
+						By("checking the ReadCall stub conditional statement body", func() {
+							Expect(statement.Body).To(HaveLen(1))
+
+							returnStatement := statement.Body[0].(rendering.ReturnStatement)
+							Expect(returnStatement.Results).To(HaveLen(1))
+
+							result := returnStatement.Results[0].(rendering.Call)
+							selector := result.X.(rendering.Selector)
+							Expect(selector.Parts).To(HaveLen(3))
+							Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
+							Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
+							Expect(selector.Parts[2].(rendering.Field).Name).To(Equal("Stub"))
+						})
+					})
+
 					By("checking the MethodCall return statement", func() {
-						statement := function.Body[4].(rendering.ReturnStatement)
+						statement := function.Body[5].(rendering.ReturnStatement)
 
 						Expect(statement.Results).To(HaveLen(1))
 

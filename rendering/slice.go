@@ -17,3 +17,5 @@ func (s Slice) Expr() ast.Expr {
 		Elt: s.Elem.Expr(),
 	}
 }
+
+func (s Slice) isType() {}

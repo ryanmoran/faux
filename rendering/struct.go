@@ -28,6 +28,8 @@ func (s Struct) Expr() ast.Expr {
 	}
 }
 
+func (s Struct) isType() {}
+
 func (s Struct) FieldWithName(name string) Field {
 	name = TitleString(name)
 

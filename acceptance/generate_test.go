@@ -9,6 +9,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -34,31 +35,13 @@ var _ = Describe("faux", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("generates a fake", func() {
-		command := exec.Command(executable,
-			"--file", "./fixtures/interfaces.go",
-			"--output", outputFile,
-			"--interface", "SimpleInterface")
-
-		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, "10s").Should(gexec.Exit(0))
-
-		outputContent, err := ioutil.ReadFile(outputFile)
-		Expect(err).NotTo(HaveOccurred())
-
-		expectedContent, err := ioutil.ReadFile("fixtures/fakes/simple_interface.go")
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
-	})
-
-	Context("when there are chan arguments", func() {
-		It("generates a fake", func() {
+	DescribeTable("fake generation",
+		func(filePath, packagePath, interfaceName, fixtureFileName string) {
 			command := exec.Command(executable,
-				"--file", "./fixtures/interfaces.go",
+				"--file", filePath,
+				"--package", packagePath,
 				"--output", outputFile,
-				"--interface", "ChanInterface")
+				"--interface", interfaceName)
 
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -67,33 +50,20 @@ var _ = Describe("faux", func() {
 			outputContent, err := ioutil.ReadFile(outputFile)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedContent, err := ioutil.ReadFile("fixtures/fakes/chan_interface.go")
+			expectedContent, err := ioutil.ReadFile(filepath.Join("fixtures", "fakes", fixtureFileName))
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
-		})
-	})
+		},
 
-	Context("when there are duplicate arguments", func() {
-		It("generates a fake", func() {
-			command := exec.Command(executable,
-				"--file", "./fixtures/interfaces.go",
-				"--output", outputFile,
-				"--interface", "DuplicateArgumentInterface")
-
-			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session, "10s").Should(gexec.Exit(0))
-
-			outputContent, err := ioutil.ReadFile(outputFile)
-			Expect(err).NotTo(HaveOccurred())
-
-			expectedContent, err := ioutil.ReadFile("fixtures/fakes/duplicate_argument_interface.go")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
-		})
-	})
+		Entry("simple", "./fixtures/interfaces.go", "", "SimpleInterface", "simple_interface.go"),
+		Entry("channels", "./fixtures/interfaces.go", "", "ChanInterface", "chan_interface.go"),
+		Entry("duplicate arguments", "./fixtures/interfaces.go", "", "DuplicateArgumentInterface", "duplicate_argument_interface.go"),
+		Entry("gomod", "./fixtures/interfaces.go", "", "ModuleInterface", "module_interface.go"),
+		Entry("gopath", "", "github.com/pivotal-cf/jhanda", "Command", "jhanda_command.go"),
+		Entry("stdlib", "", "io", "Reader", "io_reader.go"),
+		Entry("variadic", "./fixtures/interfaces.go", "", "VariadicInterface", "variadic_interface.go"),
+	)
 
 	Context("when the source file is provided via an environment variable", func() {
 		It("generates a fake", func() {

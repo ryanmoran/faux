@@ -3,19 +3,17 @@ package rendering
 import "go/ast"
 
 type DeferStatement struct {
-	Elem Type
+	Call Call
 }
 
-func NewDeferStatement(elem Type) DeferStatement {
+func NewDeferStatement(call Call) DeferStatement {
 	return DeferStatement{
-		Elem: elem,
+		Call: call,
 	}
 }
 
 func (ds DeferStatement) Stmt() ast.Stmt {
 	return &ast.DeferStmt{
-		Call: &ast.CallExpr{
-			Fun: ds.Elem.Expr(),
-		},
+		Call: ds.Call.Expr().(*ast.CallExpr),
 	}
 }
