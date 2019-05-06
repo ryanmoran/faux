@@ -63,6 +63,7 @@ var _ = Describe("faux", func() {
 		Entry("gopath", "", "github.com/pivotal-cf/jhanda", "Command", "jhanda_command.go"),
 		Entry("stdlib", "", "io", "Reader", "io_reader.go"),
 		Entry("variadic", "./fixtures/interfaces.go", "", "VariadicInterface", "variadic_interface.go"),
+		Entry("functions", "./fixtures/interfaces.go", "", "FunctionInterface", "function_interface.go"),
 	)
 
 	Context("when the source file is provided via an environment variable", func() {

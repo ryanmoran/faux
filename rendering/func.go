@@ -31,14 +31,12 @@ func (f Func) Expr() ast.Expr {
 		results = append(results, result.Field())
 	}
 
-	return &ast.FuncLit{
-		Type: &ast.FuncType{
-			Params: &ast.FieldList{
-				List: params,
-			},
-			Results: &ast.FieldList{
-				List: results,
-			},
+	return &ast.FuncType{
+		Params: &ast.FieldList{
+			List: params,
+		},
+		Results: &ast.FieldList{
+			List: results,
 		},
 	}
 }

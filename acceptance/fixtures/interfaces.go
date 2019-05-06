@@ -26,3 +26,7 @@ type ModuleInterface interface {
 type DuplicateArgumentInterface interface {
 	Duplicates(string, string, int) (string, int, int)
 }
+
+type FunctionInterface interface {
+	FuncMethod(func(string) error) func(int) bool
+}

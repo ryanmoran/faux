@@ -50,6 +50,21 @@ func NewType(t types.Type) Type {
 
 		return NewStruct(fields)
 
+	case *types.Signature:
+		var params []Param
+		for i := 0; i < s.Params().Len(); i++ {
+			param := s.Params().At(i)
+			params = append(params, NewParam("", NewType(param.Type()), false))
+		}
+
+		var results []Result
+		for i := 0; i < s.Results().Len(); i++ {
+			result := s.Results().At(i)
+			results = append(results, NewResult(NewType(result.Type())))
+		}
+
+		return NewFunc(s.String(), Receiver{}, params, results, nil)
+
 	default:
 		panic(fmt.Sprintf("unknown type: %#v\n", t))
 	}
