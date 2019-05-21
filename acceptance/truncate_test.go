@@ -50,7 +50,7 @@ var _ = Describe("faux", func() {
 
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(0))
+		Eventually(session, "10s").Should(gexec.Exit(0))
 
 		outputContents, err := ioutil.ReadFile(outputFile)
 		Expect(err).NotTo(HaveOccurred())

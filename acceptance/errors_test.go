@@ -57,7 +57,7 @@ var _ = Describe("faux", func() {
 
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "10s").Should(gexec.Exit(1))
 
 				path, err := filepath.Abs("./fixtures/garbage")
 				Expect(err).NotTo(HaveOccurred())
@@ -79,7 +79,7 @@ var _ = Describe("faux", func() {
 
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "10s").Should(gexec.Exit(1))
 
 				Expect(string(session.Err.Contents())).To(ContainSubstring("could not create directory"))
 			})
@@ -96,7 +96,7 @@ var _ = Describe("faux", func() {
 
 					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 					Expect(err).NotTo(HaveOccurred())
-					Eventually(session).Should(gexec.Exit(1))
+					Eventually(session, "10s").Should(gexec.Exit(1))
 
 					Expect(string(session.Err.Contents())).To(ContainSubstring("could not create output file"))
 				})

@@ -8,7 +8,7 @@ import (
 )
 
 func Parse(path, name string) (Interface, error) {
-	pkgs, err := packages.Load(&packages.Config{Mode: packages.LoadTypes}, path)
+	pkgs, err := packages.Load(&packages.Config{Mode: packages.LoadAllSyntax}, path)
 	if err != nil {
 		return Interface{}, err
 	}
