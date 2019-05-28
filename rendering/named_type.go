@@ -17,6 +17,13 @@ func NewNamedType(name string, t Type) NamedType {
 	}
 }
 
+func NewDefinedType(name string) NamedType {
+	return NamedType{
+		Name: name,
+		Type: Interface{},
+	}
+}
+
 func (nt NamedType) Expr() ast.Expr {
 	return ast.NewIdent(nt.Name)
 }

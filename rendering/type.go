@@ -27,7 +27,7 @@ func NewType(t types.Type) Type {
 			name = fmt.Sprintf("%s.%s", pkg.Name(), obj.Name())
 		}
 
-		return NewNamedType(name, NewType(t.Underlying()))
+		return NewDefinedType(name)
 
 	case *types.Interface:
 		return Interface{}
