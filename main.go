@@ -92,7 +92,12 @@ Flags:
 		stderr.Fatalf("could not format fake ast: %s", err)
 	}
 
-	result, err := imports.Process(output.Name(), buffer.Bytes(), nil)
+	outputPath, err := filepath.Abs(output.Name())
+	if err != nil {
+		stderr.Fatalf("could not determine output absolute path: %s", err)
+	}
+
+	result, err := imports.Process(outputPath, buffer.Bytes(), nil)
 	if err != nil {
 		stderr.Fatalf("could not process imports: %s\n\n%s", err, buffer.String())
 	}
