@@ -66,7 +66,7 @@ You can also build from source.
 
 ### Building from Source
 You'll need at least Go 1.11, as
-`om` uses Go Modules to manage dependencies.
+`faux` uses Go Modules to manage dependencies.
 
 To build from source, after you've cloned the repo, run these commands from the top level of the repo:
 
