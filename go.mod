@@ -6,3 +6,5 @@ require (
 	github.com/pivotal-cf/jhanda v0.0.0-20181025233525-e6aa09a032df
 	golang.org/x/tools v0.0.0-20190228203856-589c23e65e65
 )
+
+go 1.13
