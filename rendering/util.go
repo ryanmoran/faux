@@ -42,6 +42,9 @@ func TypeName(t Type) string {
 		parts := strings.Split(s.Name, ".")
 		return parts[len(parts)-1]
 
+	case Pointer:
+		return TypeName(s.Elem)
+
 	case Chan:
 		return fmt.Sprintf("%sChannel", TypeName(s.Elem))
 
