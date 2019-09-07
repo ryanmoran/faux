@@ -39,7 +39,18 @@ func NewType(t types.Type) Type {
 		return NewMap(NewType(s.Key()), NewType(s.Elem()))
 
 	case *types.Chan:
-		return NewChan(NewType(s.Elem()))
+		var send, recv bool
+		switch s.Dir() {
+		case types.SendRecv:
+			send = true
+			recv = true
+		case types.SendOnly:
+			send = true
+		case types.RecvOnly:
+			recv = true
+		}
+
+		return NewChan(NewType(s.Elem()), send, recv)
 
 	case *types.Struct:
 		var fields []Field

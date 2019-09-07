@@ -17,7 +17,7 @@ type VariadicInterface interface {
 }
 
 type ChanInterface interface {
-	ChanMethod(chan int)
+	ChanMethod(chan int, <-chan string) chan<- bool
 }
 
 type ModuleInterface interface {
