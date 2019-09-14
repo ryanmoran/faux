@@ -85,7 +85,8 @@ Flags:
 	defer output.Close()
 
 	buffer := bytes.NewBuffer([]byte{})
-	tree := rendering.Build(iface).AST()
+	context := rendering.NewContext()
+	tree := context.Build(iface).AST()
 
 	err = format.Node(buffer, token.NewFileSet(), tree)
 	if err != nil {
@@ -97,7 +98,7 @@ Flags:
 		stderr.Fatalf("could not determine output absolute path: %s", err)
 	}
 
-	result, err := imports.Process(outputPath, buffer.Bytes(), nil)
+	result, err := imports.Process(outputPath, buffer.Bytes(), &imports.Options{FormatOnly: false})
 	if err != nil {
 		stderr.Fatalf("could not process imports: %s\n\n%s", err, buffer.String())
 	}
