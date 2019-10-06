@@ -23,7 +23,7 @@ var _ = Describe("Signature", func() {
 	It("parses a signature from a func", func() {
 		method := types.NewFunc(0, pkg, "SomeMethod", sig)
 
-		signature := parsing.NewSignature(method)
+		signature := parsing.NewSignature(nil, method)
 		Expect(signature).To(Equal(parsing.Signature{
 			Name: "SomeMethod",
 		}))
@@ -47,7 +47,7 @@ var _ = Describe("Signature", func() {
 		It("parses those params", func() {
 			method := types.NewFunc(0, pkg, "SomeMethod", sig)
 
-			signature := parsing.NewSignature(method)
+			signature := parsing.NewSignature(nil, method)
 			Expect(signature).To(Equal(parsing.Signature{
 				Name: "SomeMethod",
 				Params: []parsing.Argument{
@@ -73,7 +73,7 @@ var _ = Describe("Signature", func() {
 			It("marks the last param as variadic", func() {
 				method := types.NewFunc(0, pkg, "SomeMethod", sig)
 
-				signature := parsing.NewSignature(method)
+				signature := parsing.NewSignature(nil, method)
 				Expect(signature).To(Equal(parsing.Signature{
 					Name: "SomeMethod",
 					Params: []parsing.Argument{

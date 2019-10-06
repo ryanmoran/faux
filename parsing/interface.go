@@ -10,7 +10,7 @@ type Interface struct {
 	Signatures []Signature
 }
 
-func NewInterface(n *types.Named) (Interface, error) {
+func NewInterface(pkgMap map[string]string, n *types.Named) (Interface, error) {
 	var signatures []Signature
 
 	underlying, ok := n.Underlying().(*types.Interface)
@@ -19,7 +19,7 @@ func NewInterface(n *types.Named) (Interface, error) {
 	}
 
 	for i := 0; i < underlying.NumMethods(); i++ {
-		signatures = append(signatures, NewSignature(underlying.Method(i)))
+		signatures = append(signatures, NewSignature(pkgMap, underlying.Method(i)))
 	}
 
 	return Interface{

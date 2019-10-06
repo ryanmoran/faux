@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/cloudfoundry/bosh-utils/logger"
+	clogger "github.com/hashicorp/consul/logger"
 	"github.com/pivotal-cf/jhanda"
 )
 
@@ -30,4 +32,8 @@ type DuplicateArgumentInterface interface {
 
 type FunctionInterface interface {
 	FuncMethod(func(string) error) func(int) bool
+}
+
+type NamedPackageInterface interface {
+	NamedPackageMethod(config clogger.Config, level logger.LogLevel)
 }

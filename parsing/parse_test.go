@@ -98,8 +98,15 @@ var _ = Describe("Parse", func() {
 
 		Context("when the name matches no object in scope", func() {
 			It("returns an error", func() {
+				_, err := parsing.Parse("io", "Banana")
+				Expect(err).To(MatchError("failed to find named type: io.Banana"))
+			})
+		})
+
+		Context("when the package has no files", func() {
+			It("returns an error", func() {
 				_, err := parsing.Parse("some-package", "SomeType")
-				Expect(err).To(MatchError("failed to find named type: some-package.SomeType"))
+				Expect(err).To(MatchError("failed to load package with any files: \"some-package\""))
 			})
 		})
 	})

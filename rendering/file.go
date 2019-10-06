@@ -1,16 +1,23 @@
 package rendering
 
-import "go/ast"
+import (
+	"go/ast"
+	"go/token"
+
+	"golang.org/x/tools/go/ast/astutil"
+)
 
 type File struct {
 	Package string
+	Imports Imports
 	Types   []NamedType
 	Funcs   []Func
 }
 
-func NewFile(pkg string, types []NamedType, funcs []Func) File {
+func NewFile(pkg string, imports Imports, types []NamedType, funcs []Func) File {
 	return File{
 		Package: pkg,
+		Imports: imports,
 		Types:   types,
 		Funcs:   funcs,
 	}
@@ -26,8 +33,14 @@ func (f File) AST() *ast.File {
 		decls = append(decls, fn.Decl())
 	}
 
-	return &ast.File{
+	file := &ast.File{
 		Name:  ast.NewIdent(f.Package),
 		Decls: decls,
 	}
+
+	for _, pkg := range f.Imports {
+		astutil.AddNamedImport(token.NewFileSet(), file, pkg.Name, pkg.Path)
+	}
+
+	return file
 }

@@ -6,10 +6,16 @@ import (
 	"github.com/ryanmoran/faux/parsing"
 )
 
-type Context struct{}
+type Context struct {
+	imports Imports
+}
 
 func NewContext() *Context {
-	return &Context{}
+	return &Context{
+		imports: Imports{
+			Package{Path: "sync"},
+		},
+	}
 }
 
 func (c *Context) Build(iface parsing.Interface) File {
@@ -20,7 +26,7 @@ func (c *Context) Build(iface parsing.Interface) File {
 		funcs = append(funcs, c.BuildFunc(fake, signature))
 	}
 
-	return NewFile("fakes", []NamedType{fake}, funcs)
+	return NewFile("fakes", c.imports, []NamedType{fake}, funcs)
 }
 
 func (c *Context) BuildFakeType(iface parsing.Interface) NamedType {
@@ -63,6 +69,10 @@ func (c *Context) BuildCallCount() Field {
 func (c *Context) BuildReceives(args []parsing.Argument) Field {
 	var fields []Field
 	for i, arg := range args {
+		if arg.Package != nil {
+			c.imports.Add(arg.Package)
+		}
+
 		name := arg.Name
 		if name == "" {
 			name = FieldTypeName(args, i)
@@ -78,6 +88,10 @@ func (c *Context) BuildReceives(args []parsing.Argument) Field {
 func (c *Context) BuildReturns(args []parsing.Argument) Field {
 	var fields []Field
 	for i, arg := range args {
+		if arg.Package != nil {
+			c.imports.Add(arg.Package)
+		}
+
 		name := arg.Name
 		if name == "" {
 			name = FieldTypeName(args, i)

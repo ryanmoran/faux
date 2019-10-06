@@ -64,6 +64,7 @@ var _ = Describe("faux", func() {
 		Entry("stdlib", "", "io", "Reader", "io_reader.go"),
 		Entry("variadic", "./fixtures/interfaces.go", "", "VariadicInterface", "variadic_interface.go"),
 		Entry("functions", "./fixtures/interfaces.go", "", "FunctionInterface", "function_interface.go"),
+		Entry("named package", "./fixtures/interfaces.go", "", "NamedPackageInterface", "named_package_interface.go"),
 	)
 
 	Context("when the source file is provided via an environment variable", func() {
