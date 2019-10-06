@@ -10,10 +10,10 @@ type Type interface {
 	isType()
 }
 
-func NewType(t types.Type) Type {
+func NewType(t types.Type, imports *Imports) Type {
 	switch s := t.(type) {
 	case *types.Slice:
-		return NewSlice(NewType(s.Elem()))
+		return NewSlice(NewType(s.Elem(), imports))
 
 	case *types.Basic:
 		return NewBasicType(s)
@@ -24,7 +24,12 @@ func NewType(t types.Type) Type {
 		obj := s.Obj()
 		pkg := obj.Pkg()
 		if pkg != nil {
-			name = fmt.Sprintf("%s.%s", pkg.Name(), obj.Name())
+			imports.Add(pkg)
+			pkgName := imports.Lookup(pkg.Path())
+			if pkgName == "" || pkgName == "." {
+				pkgName = pkg.Name()
+			}
+			name = fmt.Sprintf("%s.%s", pkgName, obj.Name())
 		}
 
 		return NewDefinedType(name)
@@ -33,10 +38,10 @@ func NewType(t types.Type) Type {
 		return Interface{}
 
 	case *types.Pointer:
-		return NewPointer(NewType(s.Elem()))
+		return NewPointer(NewType(s.Elem(), imports))
 
 	case *types.Map:
-		return NewMap(NewType(s.Key()), NewType(s.Elem()))
+		return NewMap(NewType(s.Key(), imports), NewType(s.Elem(), imports))
 
 	case *types.Chan:
 		var send, recv bool
@@ -50,13 +55,13 @@ func NewType(t types.Type) Type {
 			recv = true
 		}
 
-		return NewChan(NewType(s.Elem()), send, recv)
+		return NewChan(NewType(s.Elem(), imports), send, recv)
 
 	case *types.Struct:
 		var fields []Field
 		for i := 0; i < s.NumFields(); i++ {
 			field := s.Field(i)
-			fields = append(fields, NewField(field.Name(), NewType(field.Type())))
+			fields = append(fields, NewField(field.Name(), NewType(field.Type(), imports)))
 		}
 
 		return NewStruct(fields)
@@ -65,13 +70,13 @@ func NewType(t types.Type) Type {
 		var params []Param
 		for i := 0; i < s.Params().Len(); i++ {
 			param := s.Params().At(i)
-			params = append(params, NewParam("", NewType(param.Type()), false))
+			params = append(params, NewParam("", NewType(param.Type(), imports), false))
 		}
 
 		var results []Result
 		for i := 0; i < s.Results().Len(); i++ {
 			result := s.Results().At(i)
-			results = append(results, NewResult(NewType(result.Type())))
+			results = append(results, NewResult(NewType(result.Type(), imports)))
 		}
 
 		return NewFunc(s.String(), Receiver{}, params, results, nil)

@@ -25,7 +25,7 @@ var _ = Describe("Interface", func() {
 	})
 
 	It("parses an interface from a named type", func() {
-		iface, err := parsing.NewInterface(nil, namedType)
+		iface, err := parsing.NewInterface(namedType)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(iface).To(Equal(parsing.Interface{
 			Name: "SomeType",
@@ -44,7 +44,7 @@ var _ = Describe("Interface", func() {
 		})
 
 		It("includes those methods in the parsed interface", func() {
-			iface, err := parsing.NewInterface(nil, namedType)
+			iface, err := parsing.NewInterface(namedType)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(iface).To(Equal(parsing.Interface{
 				Name: "SomeType",
@@ -64,7 +64,7 @@ var _ = Describe("Interface", func() {
 		})
 
 		It("returns an error", func() {
-			_, err := parsing.NewInterface(nil, namedType)
+			_, err := parsing.NewInterface(namedType)
 			Expect(err).To(MatchError("failed to load underlying type: int is not an interface"))
 		})
 	})

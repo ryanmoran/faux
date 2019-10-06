@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 
+	. "encoding/base64"
+
 	"github.com/cloudfoundry/bosh-utils/logger"
 	clogger "github.com/hashicorp/consul/logger"
 	"github.com/pivotal-cf/jhanda"
@@ -35,5 +37,5 @@ type FunctionInterface interface {
 }
 
 type NamedPackageInterface interface {
-	NamedPackageMethod(config clogger.Config, level logger.LogLevel)
+	NamedPackageMethod(config clogger.Config, level logger.LogLevel) Encoding
 }

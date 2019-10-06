@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Parse", func() {
 	It("parses the package and returns a parsed interface", func() {
-		iface, err := parsing.Parse("io", "Reader")
+		iface, pkgMap, err := parsing.Parse("io", "Reader")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(iface).To(Equal(parsing.Interface{
 			Name: "Reader",
@@ -38,11 +38,27 @@ var _ = Describe("Parse", func() {
 				},
 			},
 		}))
+		Expect(pkgMap).To(HaveLen(15))
+		Expect(pkgMap).To(HaveKey("bytes"))
+		Expect(pkgMap).To(HaveKey("crypto/sha1"))
+		Expect(pkgMap).To(HaveKey("errors"))
+		Expect(pkgMap).To(HaveKey("fmt"))
+		Expect(pkgMap).To(HaveKey("io"))
+		Expect(pkgMap).To(HaveKey("io/ioutil"))
+		Expect(pkgMap).To(HaveKey("log"))
+		Expect(pkgMap).To(HaveKey("os"))
+		Expect(pkgMap).To(HaveKey("runtime"))
+		Expect(pkgMap).To(HaveKey("sort"))
+		Expect(pkgMap).To(HaveKey("strings"))
+		Expect(pkgMap).To(HaveKey("sync"))
+		Expect(pkgMap).To(HaveKey("sync/atomic"))
+		Expect(pkgMap).To(HaveKey("testing"))
+		Expect(pkgMap).To(HaveKey("time"))
 	})
 
 	Context("when there is an embedded interface", func() {
 		It("parses the package and returns a parsed interface", func() {
-			iface, err := parsing.Parse("io", "ReadCloser")
+			iface, pkgMap, err := parsing.Parse("io", "ReadCloser")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(iface).To(Equal(parsing.Interface{
 				Name: "ReadCloser",
@@ -77,6 +93,22 @@ var _ = Describe("Parse", func() {
 					},
 				},
 			}))
+			Expect(pkgMap).To(HaveLen(15))
+			Expect(pkgMap).To(HaveKey("bytes"))
+			Expect(pkgMap).To(HaveKey("crypto/sha1"))
+			Expect(pkgMap).To(HaveKey("errors"))
+			Expect(pkgMap).To(HaveKey("fmt"))
+			Expect(pkgMap).To(HaveKey("io"))
+			Expect(pkgMap).To(HaveKey("io/ioutil"))
+			Expect(pkgMap).To(HaveKey("log"))
+			Expect(pkgMap).To(HaveKey("os"))
+			Expect(pkgMap).To(HaveKey("runtime"))
+			Expect(pkgMap).To(HaveKey("sort"))
+			Expect(pkgMap).To(HaveKey("strings"))
+			Expect(pkgMap).To(HaveKey("sync"))
+			Expect(pkgMap).To(HaveKey("sync/atomic"))
+			Expect(pkgMap).To(HaveKey("testing"))
+			Expect(pkgMap).To(HaveKey("time"))
 		})
 	})
 
@@ -91,21 +123,21 @@ var _ = Describe("Parse", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := parsing.Parse("io", "Reader")
+				_, _, err := parsing.Parse("io", "Reader")
 				Expect(err).To(MatchError(ContainSubstring("executable file not found in $PATH")))
 			})
 		})
 
 		Context("when the name matches no object in scope", func() {
 			It("returns an error", func() {
-				_, err := parsing.Parse("io", "Banana")
+				_, _, err := parsing.Parse("io", "Banana")
 				Expect(err).To(MatchError("failed to find named type: io.Banana"))
 			})
 		})
 
 		Context("when the package has no files", func() {
 			It("returns an error", func() {
-				_, err := parsing.Parse("some-package", "SomeType")
+				_, _, err := parsing.Parse("some-package", "SomeType")
 				Expect(err).To(MatchError("failed to load package with any files: \"some-package\""))
 			})
 		})

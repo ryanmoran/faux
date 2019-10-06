@@ -11,7 +11,7 @@ type Argument struct {
 	Package  *types.Package
 }
 
-func NewArgument(pkgMap map[string]string, v *types.Var, variadic bool) Argument {
+func NewArgument(v *types.Var, variadic bool) Argument {
 	var pkg *types.Package
 	switch t := v.Type().(type) {
 	case *types.Named:
@@ -23,13 +23,6 @@ func NewArgument(pkgMap map[string]string, v *types.Var, variadic bool) Argument
 			if e.Obj().Pkg() != nil {
 				pkg = e.Obj().Pkg()
 			}
-		}
-	}
-
-	if pkg != nil {
-		name := pkgMap[pkg.Path()]
-		if name != "" {
-			pkg.SetName(name)
 		}
 	}
 

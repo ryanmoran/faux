@@ -11,25 +11,25 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func Parse(path, name string) (Interface, error) {
+func Parse(path, name string) (Interface, map[string]string, error) {
 	pkgs, err := packages.Load(&packages.Config{Mode: packages.LoadAllSyntax}, path)
 	if err != nil {
-		return Interface{}, err
+		return Interface{}, nil, err
 	}
 
 	if len(pkgs) != 1 {
-		return Interface{}, fmt.Errorf("failed to find package: %q", path)
+		return Interface{}, nil, fmt.Errorf("failed to find package: %q", path)
 	}
 	pkg := pkgs[0].Types
 
 	if len(pkgs[0].GoFiles) == 0 {
-		return Interface{}, fmt.Errorf("failed to load package with any files: %q", path)
+		return Interface{}, nil, fmt.Errorf("failed to load package with any files: %q", path)
 	}
 
 	dir := filepath.Dir(pkgs[0].GoFiles[0])
 	astPkgs, err := parser.ParseDir(token.NewFileSet(), dir, nil, parser.ImportsOnly)
 	if err != nil {
-		return Interface{}, fmt.Errorf("failed to parse directory: %s", dir)
+		return Interface{}, nil, fmt.Errorf("failed to parse directory: %s", dir)
 	}
 
 	pkgMap := map[string]string{}
@@ -43,7 +43,7 @@ func Parse(path, name string) (Interface, error) {
 
 				path, err := strconv.Unquote(i.Path.Value)
 				if err != nil {
-					return Interface{}, err
+					return Interface{}, nil, err
 				}
 
 				pkgMap[path] = name
@@ -53,13 +53,18 @@ func Parse(path, name string) (Interface, error) {
 
 	object := pkg.Scope().Lookup(name)
 	if object == nil {
-		return Interface{}, fmt.Errorf("failed to find named type: %s.%s", path, name)
+		return Interface{}, nil, fmt.Errorf("failed to find named type: %s.%s", path, name)
 	}
 
 	namedType, ok := object.Type().(*types.Named)
 	if !ok {
-		return Interface{}, fmt.Errorf("failed to load named type: %s.%s", path, name)
+		return Interface{}, nil, fmt.Errorf("failed to load named type: %s.%s", path, name)
 	}
 
-	return NewInterface(pkgMap, namedType)
+	iface, err := NewInterface(namedType)
+	if err != nil {
+		return Interface{}, nil, fmt.Errorf("failed to generate fake from interface: %s", err)
+	}
+
+	return iface, pkgMap, nil
 }

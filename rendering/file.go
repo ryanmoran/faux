@@ -9,12 +9,12 @@ import (
 
 type File struct {
 	Package string
-	Imports Imports
+	Imports *Imports
 	Types   []NamedType
 	Funcs   []Func
 }
 
-func NewFile(pkg string, imports Imports, types []NamedType, funcs []Func) File {
+func NewFile(pkg string, imports *Imports, types []NamedType, funcs []Func) File {
 	return File{
 		Package: pkg,
 		Imports: imports,
@@ -38,8 +38,12 @@ func (f File) AST() *ast.File {
 		Decls: decls,
 	}
 
-	for _, pkg := range f.Imports {
-		astutil.AddNamedImport(token.NewFileSet(), file, pkg.Name, pkg.Path)
+	for _, path := range f.Imports.used {
+		for _, pkg := range f.Imports.packages {
+			if pkg.Path == path {
+				astutil.AddNamedImport(token.NewFileSet(), file, pkg.Name, pkg.Path)
+			}
+		}
 	}
 
 	return file

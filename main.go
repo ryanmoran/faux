@@ -68,7 +68,7 @@ Flags:
 		options.Package = filepath.Dir(path)
 	}
 
-	iface, err := parsing.Parse(options.Package, options.Interface)
+	iface, pkgMap, err := parsing.Parse(options.Package, options.Interface)
 	if err != nil {
 		stderr.Fatal(err)
 	}
@@ -85,7 +85,7 @@ Flags:
 	defer output.Close()
 
 	buffer := bytes.NewBuffer([]byte{})
-	context := rendering.NewContext()
+	context := rendering.NewContext(pkgMap)
 	tree := context.Build(iface).AST()
 
 	err = format.Node(buffer, token.NewFileSet(), tree)

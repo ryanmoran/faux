@@ -8,7 +8,7 @@ type Signature struct {
 	Results []Argument
 }
 
-func NewSignature(pkgMap map[string]string, f *types.Func) Signature {
+func NewSignature(f *types.Func) Signature {
 	signature := f.Type().(*types.Signature)
 
 	var params []Argument
@@ -18,12 +18,12 @@ func NewSignature(pkgMap map[string]string, f *types.Func) Signature {
 			variadic = true
 		}
 
-		params = append(params, NewArgument(pkgMap, signature.Params().At(i), variadic))
+		params = append(params, NewArgument(signature.Params().At(i), variadic))
 	}
 
 	var results []Argument
 	for i := 0; i < signature.Results().Len(); i++ {
-		results = append(results, NewArgument(pkgMap, signature.Results().At(i), false))
+		results = append(results, NewArgument(signature.Results().At(i), false))
 	}
 
 	return Signature{

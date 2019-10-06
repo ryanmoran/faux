@@ -2,7 +2,6 @@ package rendering
 
 import (
 	"go/types"
-	"path"
 )
 
 type Package struct {
@@ -10,10 +9,10 @@ type Package struct {
 	Path string
 }
 
-func NewPackage(pkg *types.Package) Package {
-	var name string
-	if path.Base(pkg.Path()) != pkg.Name() {
-		name = pkg.Name()
+func NewPackage(pkg *types.Package, pkgMap map[string]string) Package {
+	name := pkgMap[pkg.Path()]
+	if name == "." {
+		name = ""
 	}
 
 	return Package{

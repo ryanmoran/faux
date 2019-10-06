@@ -1,34 +1,36 @@
 package rendering
 
 import (
-	"go/ast"
-	"go/token"
 	"go/types"
 )
 
-type Imports []Package
+type Imports struct {
+	packages []Package
+	used     []string
+}
 
 func (i *Imports) Add(pkg *types.Package) {
-	for _, path := range *i {
-		if pkg.Path() == path.Path {
+	for index, p := range i.packages {
+		if pkg.Path() == p.Path && p.Name == "." {
+			i.packages[index].Name = ""
+		}
+	}
+
+	for _, path := range i.used {
+		if pkg.Path() == path {
 			return
 		}
 	}
 
-	*i = append(*i, NewPackage(pkg))
+	i.used = append(i.used, pkg.Path())
 }
 
-func (i Imports) Spec() []*ast.ImportSpec {
-	var spec []*ast.ImportSpec
-	for _, pkg := range i {
-		spec = append(spec, &ast.ImportSpec{
-			Name: ast.NewIdent(pkg.Name),
-			Path: &ast.BasicLit{
-				Kind:  token.STRING,
-				Value: pkg.Path,
-			},
-		})
+func (i Imports) Lookup(path string) string {
+	for _, pkg := range i.packages {
+		if pkg.Path == path {
+			return pkg.Name
+		}
 	}
 
-	return spec
+	return ""
 }

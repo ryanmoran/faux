@@ -15,7 +15,7 @@ var _ = Describe("Context", func() {
 		var context *rendering.Context
 
 		BeforeEach(func() {
-			context = rendering.NewContext()
+			context = rendering.NewContext(nil)
 		})
 
 		It("builds a file representation", func() {

@@ -7,14 +7,26 @@ import (
 )
 
 type Context struct {
-	imports Imports
+	imports *Imports
 }
 
-func NewContext() *Context {
-	return &Context{
-		imports: Imports{
-			Package{Path: "sync"},
+func NewContext(packages map[string]string) *Context {
+	imports := &Imports{
+		packages: []Package{
+			{Path: "sync"},
 		},
+		used: []string{"sync"},
+	}
+
+	for path, name := range packages {
+		imports.packages = append(imports.packages, Package{
+			Path: path,
+			Name: name,
+		})
+	}
+
+	return &Context{
+		imports: imports,
 	}
 }
 
@@ -75,10 +87,10 @@ func (c *Context) BuildReceives(args []parsing.Argument) Field {
 
 		name := arg.Name
 		if name == "" {
-			name = FieldTypeName(args, i)
+			name = FieldTypeName(args, i, c.imports)
 		}
 
-		field := NewField(name, NewType(arg.Type))
+		field := NewField(name, NewType(arg.Type, c.imports))
 		fields = append(fields, field)
 	}
 
@@ -94,10 +106,10 @@ func (c *Context) BuildReturns(args []parsing.Argument) Field {
 
 		name := arg.Name
 		if name == "" {
-			name = FieldTypeName(args, i)
+			name = FieldTypeName(args, i, c.imports)
 		}
 
-		field := NewField(name, NewType(arg.Type))
+		field := NewField(name, NewType(arg.Type, c.imports))
 		fields = append(fields, field)
 	}
 
@@ -128,7 +140,7 @@ func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
 			name = ParamName(i)
 		}
 
-		params = append(params, NewParam(name, NewType(arg.Type), arg.Variadic))
+		params = append(params, NewParam(name, NewType(arg.Type, c.imports), arg.Variadic))
 	}
 
 	return params
@@ -137,7 +149,7 @@ func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
 func (c *Context) BuildResults(args []parsing.Argument) []Result {
 	var results []Result
 	for _, arg := range args {
-		results = append(results, NewResult(NewType(arg.Type)))
+		results = append(results, NewResult(NewType(arg.Type, c.imports)))
 	}
 
 	return results
@@ -196,13 +208,13 @@ func (c *Context) BuildAssignStatement(receiver Receiver, name string, index int
 	arg := args[index]
 	argName := arg.Name
 	if argName == "" {
-		argName = FieldTypeName(args, index)
+		argName = FieldTypeName(args, index, c.imports)
 	}
 
 	paramField := receivesField.Type.(Struct).FieldWithName(argName)
 	selector := NewSelector(receiver, callField, receivesField, paramField)
 	paramName := ParamName(index)
-	param := NewParam(paramName, NewType(arg.Type), arg.Variadic)
+	param := NewParam(paramName, NewType(arg.Type, c.imports), arg.Variadic)
 
 	return NewAssignStatement(selector, param)
 }
@@ -236,7 +248,7 @@ func (c *Context) BuildReturnStatement(receiver Receiver, signature parsing.Sign
 	for i, arg := range signature.Results {
 		argName := arg.Name
 		if argName == "" {
-			argName = FieldTypeName(signature.Results, i)
+			argName = FieldTypeName(signature.Results, i, c.imports)
 		}
 
 		resultField := returnsField.Type.(Struct).FieldWithName(argName)
