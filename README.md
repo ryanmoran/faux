@@ -12,7 +12,9 @@ Flags:
   --file, -f, GOFILE  string  the name of the file to parse
   --help, -h          bool    prints the usage
   --interface, -i     string  the name of the interface to fake
+  --name, -n          string  the name to give the generated type
   --output, -o        string  the name of the file to write
+  --package, -p       string  the name of the package that contains the interface
   --version, -v       bool    prints the version
 ```
 

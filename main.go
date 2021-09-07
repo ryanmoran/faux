@@ -26,6 +26,7 @@ func main() {
 		File      string `long:"file"      short:"f" env:"GOFILE" description:"the name of the file to parse"`
 		Output    string `long:"output"    short:"o"              description:"the name of the file to write"`
 		Interface string `long:"interface" short:"i"              description:"the name of the interface to fake"`
+		Name      string `long:"name"      short:"n"              description:"the name to give the generated type"`
 	}
 
 	stdout := log.New(os.Stdout, "", 0)
@@ -71,6 +72,10 @@ Flags:
 	iface, err := parsing.Parse(options.Package, options.Interface)
 	if err != nil {
 		stderr.Fatal(err)
+	}
+
+	if options.Name != "" {
+		iface.Name = options.Name
 	}
 
 	err = os.MkdirAll(filepath.Dir(options.Output), 0755)

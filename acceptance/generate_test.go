@@ -36,13 +36,9 @@ var _ = Describe("faux", func() {
 	})
 
 	DescribeTable("fake generation",
-		func(filePath, packagePath, interfaceName, fixtureFileName string) {
-			command := exec.Command(executable,
-				"--file", filePath,
-				"--package", packagePath,
-				"--output", outputFile,
-				"--interface", interfaceName)
-
+		func(fixture string, flags ...string) {
+			flags = append(flags, "--output", outputFile)
+			command := exec.Command(executable, flags...)
 			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, "10s").Should(gexec.Exit(0))
@@ -50,20 +46,21 @@ var _ = Describe("faux", func() {
 			outputContent, err := ioutil.ReadFile(outputFile)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedContent, err := ioutil.ReadFile(filepath.Join("fixtures", "fakes", fixtureFileName))
+			expectedContent, err := ioutil.ReadFile(filepath.Join("fixtures", "fakes", fixture))
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(outputContent)).To(ContainSubstring(string(expectedContent)))
 		},
 
-		Entry("simple", "./fixtures/interfaces.go", "", "SimpleInterface", "simple_interface.go"),
-		Entry("channels", "./fixtures/interfaces.go", "", "ChanInterface", "chan_interface.go"),
-		Entry("duplicate arguments", "./fixtures/interfaces.go", "", "DuplicateArgumentInterface", "duplicate_argument_interface.go"),
-		Entry("gomod", "./fixtures/interfaces.go", "", "ModuleInterface", "module_interface.go"),
-		Entry("gopath", "", "github.com/pivotal-cf/jhanda", "Command", "jhanda_command.go"),
-		Entry("stdlib", "", "io", "Reader", "io_reader.go"),
-		Entry("variadic", "./fixtures/interfaces.go", "", "VariadicInterface", "variadic_interface.go"),
-		Entry("functions", "./fixtures/interfaces.go", "", "FunctionInterface", "function_interface.go"),
+		Entry("simple", "simple_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "SimpleInterface"),
+		Entry("channels", "chan_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "ChanInterface"),
+		Entry("duplicate arguments", "duplicate_argument_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "DuplicateArgumentInterface"),
+		Entry("gomod", "module_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "ModuleInterface"),
+		Entry("gopath", "jhanda_command.go", "--package", "github.com/pivotal-cf/jhanda", "--interface", "Command"),
+		Entry("stdlib", "io_reader.go", "--package", "io", "--interface", "Reader"),
+		Entry("variadic", "variadic_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "VariadicInterface"),
+		Entry("functions", "function_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "FunctionInterface"),
+		Entry("name", "named_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "NamedInterface", "--name", "SomeNamedInterface"),
 	)
 
 	Context("when the source file is provided via an environment variable", func() {

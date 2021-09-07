@@ -31,3 +31,7 @@ type DuplicateArgumentInterface interface {
 type FunctionInterface interface {
 	FuncMethod(func(string) error) func(int) bool
 }
+
+type NamedInterface interface {
+	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
+}
