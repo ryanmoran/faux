@@ -8,7 +8,7 @@ import (
 
 type ModuleInterface struct {
 	SomeMethodCall struct {
-		sync.Mutex
+		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
 			Usage jhanda.Usage
@@ -18,8 +18,8 @@ type ModuleInterface struct {
 }
 
 func (f *ModuleInterface) SomeMethod(param1 jhanda.Usage) {
-	f.SomeMethodCall.Lock()
-	defer f.SomeMethodCall.Unlock()
+	f.SomeMethodCall.mutex.Lock()
+	defer f.SomeMethodCall.mutex.Unlock()
 	f.SomeMethodCall.CallCount++
 	f.SomeMethodCall.Receives.Usage = param1
 	if f.SomeMethodCall.Stub != nil {

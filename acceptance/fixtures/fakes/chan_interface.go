@@ -4,7 +4,7 @@ import "sync"
 
 type ChanInterface struct {
 	ChanMethodCall struct {
-		sync.Mutex
+		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
 			IntChannel    chan int
@@ -18,8 +18,8 @@ type ChanInterface struct {
 }
 
 func (f *ChanInterface) ChanMethod(param1 chan int, param2 <-chan string) chan<- bool {
-	f.ChanMethodCall.Lock()
-	defer f.ChanMethodCall.Unlock()
+	f.ChanMethodCall.mutex.Lock()
+	defer f.ChanMethodCall.mutex.Unlock()
 	f.ChanMethodCall.CallCount++
 	f.ChanMethodCall.Receives.IntChannel = param1
 	f.ChanMethodCall.Receives.StringChannel = param2

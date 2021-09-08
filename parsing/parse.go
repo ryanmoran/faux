@@ -7,26 +7,41 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
-func Parse(path, name string) (Interface, error) {
-	pkgs, err := packages.Load(&packages.Config{Mode: packages.LoadAllSyntax}, path)
+const PackagesParseMode = packages.NeedName | packages.NeedTypes | packages.NeedImports
+
+func Parse(path, name string) (Fake, error) {
+	pkgs, err := packages.Load(&packages.Config{Mode: PackagesParseMode}, path)
 	if err != nil {
-		return Interface{}, err
+		return Fake{}, err
 	}
 
 	if len(pkgs) != 1 {
-		return Interface{}, fmt.Errorf("failed to find package: %q", path)
+		return Fake{}, fmt.Errorf("failed to find package: %q", path)
 	}
 	pkg := pkgs[0].Types
 
 	object := pkg.Scope().Lookup(name)
 	if object == nil {
-		return Interface{}, fmt.Errorf("failed to find named type: %s.%s", path, name)
+		return Fake{}, fmt.Errorf("failed to find named type: %s.%s", path, name)
 	}
 
 	namedType, ok := object.Type().(*types.Named)
 	if !ok {
-		return Interface{}, fmt.Errorf("failed to load named type: %s.%s", path, name)
+		return Fake{}, fmt.Errorf("failed to load named type: %s.%s", path, name)
 	}
 
-	return NewInterface(namedType)
+	var imports []Import
+	for _, p := range pkg.Imports() {
+		imports = append(imports, Import{
+			Name: p.Name(),
+			Path: p.Path(),
+		})
+	}
+
+	iface, err := NewInterface(namedType)
+	if err != nil {
+		return Fake{}, err
+	}
+
+	return Fake{Interface: iface, Imports: imports}, nil
 }

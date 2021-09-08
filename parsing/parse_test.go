@@ -12,50 +12,15 @@ import (
 
 var _ = Describe("Parse", func() {
 	It("parses the package and returns a parsed interface", func() {
-		iface, err := parsing.Parse("io", "Reader")
+		fake, err := parsing.Parse("io", "Reader")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(iface).To(Equal(parsing.Interface{
-			Name: "Reader",
-			Signatures: []parsing.Signature{
-				{
-					Name: "Read",
-					Params: []parsing.Argument{
-						{
-							Name: "p",
-							Type: types.NewSlice(types.Universe.Lookup("byte").Type()),
-						},
-					},
-					Results: []parsing.Argument{
-						{
-							Name: "n",
-							Type: types.Universe.Lookup("int").Type(),
-						},
-						{
-							Name: "err",
-							Type: types.Universe.Lookup("error").Type(),
-						},
-					},
-				},
+		Expect(fake).To(Equal(parsing.Fake{
+			Imports: []parsing.Import{
+				{Name: "sync", Path: "sync"},
 			},
-		}))
-	})
-
-	Context("when there is an embedded interface", func() {
-		It("parses the package and returns a parsed interface", func() {
-			iface, err := parsing.Parse("io", "ReadCloser")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(iface).To(Equal(parsing.Interface{
-				Name: "ReadCloser",
+			Interface: parsing.Interface{
+				Name: "Reader",
 				Signatures: []parsing.Signature{
-					{
-						Name: "Close",
-						Results: []parsing.Argument{
-							{
-								Name: "",
-								Type: types.Universe.Lookup("error").Type(),
-							},
-						},
-					},
 					{
 						Name: "Read",
 						Params: []parsing.Argument{
@@ -72,6 +37,51 @@ var _ = Describe("Parse", func() {
 							{
 								Name: "err",
 								Type: types.Universe.Lookup("error").Type(),
+							},
+						},
+					},
+				},
+			},
+		}))
+	})
+
+	Context("when there is an embedded interface", func() {
+		It("parses the package and returns a parsed interface", func() {
+			fake, err := parsing.Parse("io", "ReadCloser")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fake).To(Equal(parsing.Fake{
+				Imports: []parsing.Import{
+					{Name: "sync", Path: "sync"},
+				},
+				Interface: parsing.Interface{
+					Name: "ReadCloser",
+					Signatures: []parsing.Signature{
+						{
+							Name: "Close",
+							Results: []parsing.Argument{
+								{
+									Name: "",
+									Type: types.Universe.Lookup("error").Type(),
+								},
+							},
+						},
+						{
+							Name: "Read",
+							Params: []parsing.Argument{
+								{
+									Name: "p",
+									Type: types.NewSlice(types.Universe.Lookup("byte").Type()),
+								},
+							},
+							Results: []parsing.Argument{
+								{
+									Name: "n",
+									Type: types.Universe.Lookup("int").Type(),
+								},
+								{
+									Name: "err",
+									Type: types.Universe.Lookup("error").Type(),
+								},
 							},
 						},
 					},
