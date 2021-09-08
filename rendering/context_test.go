@@ -19,26 +19,31 @@ var _ = Describe("Context", func() {
 		})
 
 		It("builds a file representation", func() {
-			file := context.Build(parsing.Interface{
-				Name: "Reader",
-				Signatures: []parsing.Signature{
-					{
-						Name: "Read",
-						Params: []parsing.Argument{
-							{
-								Name:     "p",
-								Type:     types.NewSlice(types.Universe.Lookup("byte").Type()),
-								Variadic: true,
+			file := context.Build(parsing.Fake{
+				Imports: []parsing.Import{
+					{Name: "sync", Path: "sync"},
+				},
+				Interface: parsing.Interface{
+					Name: "Reader",
+					Signatures: []parsing.Signature{
+						{
+							Name: "Read",
+							Params: []parsing.Argument{
+								{
+									Name:     "p",
+									Type:     types.NewSlice(types.Universe.Lookup("byte").Type()),
+									Variadic: true,
+								},
 							},
-						},
-						Results: []parsing.Argument{
-							{
-								Name: "n",
-								Type: types.Universe.Lookup("int").Type(),
-							},
-							{
-								Name: "err",
-								Type: types.Universe.Lookup("error").Type(),
+							Results: []parsing.Argument{
+								{
+									Name: "n",
+									Type: types.Universe.Lookup("int").Type(),
+								},
+								{
+									Name: "err",
+									Type: types.Universe.Lookup("error").Type(),
+								},
 							},
 						},
 					},
@@ -46,8 +51,13 @@ var _ = Describe("Context", func() {
 			})
 
 			Expect(file.Package).To(Equal("fakes"))
+			Expect(file.Imports).To(HaveLen(1))
 			Expect(file.Types).To(HaveLen(1))
 			Expect(file.Funcs).To(HaveLen(1))
+
+			fakeImport := file.Imports[0]
+			Expect(fakeImport.Name).To(Equal("sync"))
+			Expect(fakeImport.Path).To(Equal("sync"))
 
 			fakeType := file.Types[0]
 			Expect(fakeType.Name).To(Equal("Reader"))
@@ -64,7 +74,7 @@ var _ = Describe("Context", func() {
 
 				By("checking the ReadCall.Mutex field", func() {
 					field := fieldStruct.Fields[0]
-					Expect(field.Name).To(Equal(""))
+					Expect(field.Name).To(Equal("mutex"))
 					Expect(field.Type).To(Equal(rendering.NamedType{
 						Name: "sync.Mutex",
 						Type: rendering.Struct{},
@@ -212,20 +222,22 @@ var _ = Describe("Context", func() {
 						statement := function.Body[0].(rendering.CallStatement)
 						selector := statement.Call.X.(rendering.Selector)
 
-						Expect(selector.Parts).To(HaveLen(3))
+						Expect(selector.Parts).To(HaveLen(4))
 						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
-						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Lock"))
+						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("mutex"))
+						Expect(selector.Parts[3].(rendering.Ident).Name).To(Equal("Lock"))
 					})
 
 					By("checking the defered ReadCall.Mutex.Unlock call", func() {
 						statement := function.Body[1].(rendering.DeferStatement)
 						selector := statement.Call.X.(rendering.Selector)
 
-						Expect(selector.Parts).To(HaveLen(3))
+						Expect(selector.Parts).To(HaveLen(4))
 						Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 						Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("ReadCall"))
-						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Unlock"))
+						Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("mutex"))
+						Expect(selector.Parts[3].(rendering.Ident).Name).To(Equal("Unlock"))
 					})
 
 					By("checking the ReadCall.CallCount increment statement", func() {
@@ -314,19 +326,21 @@ var _ = Describe("Context", func() {
 
 		Context("when the arguments are unnamed", func() {
 			It("builds a file representation", func() {
-				file := context.Build(parsing.Interface{
-					Name: "unnamed",
-					Signatures: []parsing.Signature{
-						{
-							Name: "Method",
-							Params: []parsing.Argument{
-								{
-									Type: types.NewSlice(types.Universe.Lookup("byte").Type()),
+				file := context.Build(parsing.Fake{
+					Interface: parsing.Interface{
+						Name: "unnamed",
+						Signatures: []parsing.Signature{
+							{
+								Name: "Method",
+								Params: []parsing.Argument{
+									{
+										Type: types.NewSlice(types.Universe.Lookup("byte").Type()),
+									},
 								},
-							},
-							Results: []parsing.Argument{
-								{
-									Type: types.Universe.Lookup("int").Type(),
+								Results: []parsing.Argument{
+									{
+										Type: types.Universe.Lookup("int").Type(),
+									},
 								},
 							},
 						},
@@ -352,7 +366,7 @@ var _ = Describe("Context", func() {
 
 					By("checking the MethodCall.Mutex field", func() {
 						field := fieldStruct.Fields[0]
-						Expect(field.Name).To(Equal(""))
+						Expect(field.Name).To(Equal("mutex"))
 						Expect(field.Type).To(Equal(rendering.NamedType{
 							Name: "sync.Mutex",
 							Type: rendering.Struct{},
@@ -474,20 +488,22 @@ var _ = Describe("Context", func() {
 							statement := function.Body[0].(rendering.CallStatement)
 							selector := statement.Call.X.(rendering.Selector)
 
-							Expect(selector.Parts).To(HaveLen(3))
+							Expect(selector.Parts).To(HaveLen(4))
 							Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 							Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
-							Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Lock"))
+							Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("mutex"))
+							Expect(selector.Parts[3].(rendering.Ident).Name).To(Equal("Lock"))
 						})
 
 						By("checking the defered MethodCall.Mutex.Unlock call", func() {
 							statement := function.Body[1].(rendering.DeferStatement)
 							selector := statement.Call.X.(rendering.Selector)
 
-							Expect(selector.Parts).To(HaveLen(3))
+							Expect(selector.Parts).To(HaveLen(4))
 							Expect(selector.Parts[0].(rendering.Receiver).Name).To(Equal("f"))
 							Expect(selector.Parts[1].(rendering.Field).Name).To(Equal("MethodCall"))
-							Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("Unlock"))
+							Expect(selector.Parts[2].(rendering.Ident).Name).To(Equal("mutex"))
+							Expect(selector.Parts[3].(rendering.Ident).Name).To(Equal("Unlock"))
 						})
 
 						By("checking the MethodCall.CallCount increment statement", func() {

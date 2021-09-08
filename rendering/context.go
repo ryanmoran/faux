@@ -12,15 +12,20 @@ func NewContext() *Context {
 	return &Context{}
 }
 
-func (c *Context) Build(iface parsing.Interface) File {
-	fake := c.BuildFakeType(iface)
+func (c *Context) Build(pfake parsing.Fake) File {
+	fake := c.BuildFakeType(pfake.Interface)
+
+	var imports []Import
+	for _, imp := range pfake.Imports {
+		imports = append(imports, NewImport(imp.Name, imp.Path))
+	}
 
 	var funcs []Func
-	for _, signature := range iface.Signatures {
+	for _, signature := range pfake.Interface.Signatures {
 		funcs = append(funcs, c.BuildFunc(fake, signature))
 	}
 
-	return NewFile("fakes", []NamedType{fake}, funcs)
+	return NewFile("fakes", imports, []NamedType{fake}, funcs)
 }
 
 func (c *Context) BuildFakeType(iface parsing.Interface) NamedType {
@@ -53,7 +58,7 @@ func (c *Context) BuildCallStruct(signature parsing.Signature) Field {
 }
 
 func (c *Context) BuildMutex() Field {
-	return NewField("", NewNamedType("sync.Mutex", NewStruct(nil)))
+	return NewField("mutex", NewNamedType("sync.Mutex", NewStruct(nil)))
 }
 
 func (c *Context) BuildCallCount() Field {
@@ -67,6 +72,7 @@ func (c *Context) BuildReceives(args []parsing.Argument) Field {
 		if name == "" {
 			name = FieldTypeName(args, i)
 		}
+		name = TitleString(name)
 
 		field := NewField(name, NewType(arg.Type))
 		fields = append(fields, field)
@@ -82,6 +88,7 @@ func (c *Context) BuildReturns(args []parsing.Argument) Field {
 		if name == "" {
 			name = FieldTypeName(args, i)
 		}
+		name = TitleString(name)
 
 		field := NewField(name, NewType(arg.Type))
 		fields = append(fields, field)
@@ -152,7 +159,7 @@ func (c *Context) BuildBody(receiver Receiver, signature parsing.Signature) []St
 func (c *Context) BuildMutexLockStatement(receiver Receiver, name string) CallStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
-	selector := NewSelector(receiver, callField, NewIdent("Lock"))
+	selector := NewSelector(receiver, callField, NewIdent("mutex"), NewIdent("Lock"))
 
 	return NewCallStatement(NewCall(selector))
 }
@@ -160,7 +167,7 @@ func (c *Context) BuildMutexLockStatement(receiver Receiver, name string) CallSt
 func (c *Context) BuildMutexUnlockStatement(receiver Receiver, name string) DeferStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
-	selector := NewSelector(receiver, callField, NewIdent("Unlock"))
+	selector := NewSelector(receiver, callField, NewIdent("mutex"), NewIdent("Unlock"))
 
 	return NewDeferStatement(NewCall(selector))
 }

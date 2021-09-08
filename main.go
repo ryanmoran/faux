@@ -69,13 +69,13 @@ Flags:
 		options.Package = filepath.Dir(path)
 	}
 
-	iface, err := parsing.Parse(options.Package, options.Interface)
+	fake, err := parsing.Parse(options.Package, options.Interface)
 	if err != nil {
 		stderr.Fatal(err)
 	}
 
 	if options.Name != "" {
-		iface.Name = options.Name
+		fake.Interface.Name = options.Name
 	}
 
 	err = os.MkdirAll(filepath.Dir(options.Output), 0755)
@@ -91,7 +91,7 @@ Flags:
 
 	buffer := bytes.NewBuffer([]byte{})
 	context := rendering.NewContext()
-	tree := context.Build(iface).AST()
+	tree := context.Build(fake).AST()
 
 	err = format.Node(buffer, token.NewFileSet(), tree)
 	if err != nil {

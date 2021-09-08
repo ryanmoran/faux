@@ -11,7 +11,7 @@ type Field struct {
 
 func NewField(name string, t Type) Field {
 	return Field{
-		Name: TitleString(name),
+		Name: name,
 		Type: t,
 	}
 }

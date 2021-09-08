@@ -4,7 +4,7 @@ import "sync"
 
 type VariadicInterface struct {
 	VariadicMethodCall struct {
-		sync.Mutex
+		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
 			SomeParams []int
@@ -14,8 +14,8 @@ type VariadicInterface struct {
 }
 
 func (f *VariadicInterface) VariadicMethod(param1 ...int) {
-	f.VariadicMethodCall.Lock()
-	defer f.VariadicMethodCall.Unlock()
+	f.VariadicMethodCall.mutex.Lock()
+	defer f.VariadicMethodCall.mutex.Unlock()
 	f.VariadicMethodCall.CallCount++
 	f.VariadicMethodCall.Receives.SomeParams = param1
 	if f.VariadicMethodCall.Stub != nil {

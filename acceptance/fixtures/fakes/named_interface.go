@@ -8,7 +8,7 @@ import (
 
 type SomeNamedInterface struct {
 	SomeMethodCall struct {
-		sync.Mutex
+		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
 			SomeParam *bytes.Buffer
@@ -21,8 +21,8 @@ type SomeNamedInterface struct {
 }
 
 func (f *SomeNamedInterface) SomeMethod(param1 *bytes.Buffer) io.Reader {
-	f.SomeMethodCall.Lock()
-	defer f.SomeMethodCall.Unlock()
+	f.SomeMethodCall.mutex.Lock()
+	defer f.SomeMethodCall.mutex.Unlock()
 	f.SomeMethodCall.CallCount++
 	f.SomeMethodCall.Receives.SomeParam = param1
 	if f.SomeMethodCall.Stub != nil {
