@@ -15,7 +15,7 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-var version string = "unknown"
+var version = "unknown"
 
 func main() {
 	var options struct {

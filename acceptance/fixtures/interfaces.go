@@ -1,16 +1,12 @@
-package main
+package fixtures
 
 import (
 	"bytes"
 	"io"
 
+	"github.com/BurntSushi/toml"
 	"github.com/pivotal-cf/jhanda"
 )
-
-type SimpleInterface interface {
-	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
-	OtherMethod(*bytes.Buffer) (io.Reader, error)
-}
 
 type VariadicInterface interface {
 	VariadicMethod(someParams ...int)
@@ -34,4 +30,8 @@ type FunctionInterface interface {
 
 type NamedInterface interface {
 	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
+}
+
+type BurntSushiParser struct {
+	Key toml.Key
 }

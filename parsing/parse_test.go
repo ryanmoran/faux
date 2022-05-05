@@ -16,7 +16,8 @@ var _ = Describe("Parse", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(fake).To(Equal(parsing.Fake{
 			Imports: []parsing.Import{
-				{Name: "sync", Path: "sync"},
+				{Name: "", Path: "errors"},
+				{Name: "", Path: "sync"},
 			},
 			Interface: parsing.Interface{
 				Name: "Reader",
@@ -51,7 +52,8 @@ var _ = Describe("Parse", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fake).To(Equal(parsing.Fake{
 				Imports: []parsing.Import{
-					{Name: "sync", Path: "sync"},
+					{Name: "", Path: "errors"},
+					{Name: "", Path: "sync"},
 				},
 				Interface: parsing.Interface{
 					Name: "ReadCloser",
