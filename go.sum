@@ -33,8 +33,8 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.20.0 h1:8W0cWlwFkflGPLltQvLRB7ZVD5HuP6ng320w2IS245Q=
 github.com/onsi/gomega v1.20.0/go.mod h1:DtrZpjmvpn2mPm4YWQa0/ALMDj9v4YxLgojwPeREyVo=
-github.com/pelletier/go-toml/v2 v2.0.3 h1:h9JoA60e1dVEOpp0PFwJSmt1Htu057NUq9/bUwaO61s=
-github.com/pelletier/go-toml/v2 v2.0.3/go.mod h1:OMHamSCAODeSsVrwwvcJOaoN0LIUIaFVNZzmWyNfXas=
+github.com/pelletier/go-toml/v2 v2.0.5 h1:ipoSadvV8oGUjnUbMub59IDPPwfxF694nG/jwbMiyQg=
+github.com/pelletier/go-toml/v2 v2.0.5/go.mod h1:OMHamSCAODeSsVrwwvcJOaoN0LIUIaFVNZzmWyNfXas=
 github.com/pivotal-cf/jhanda v0.0.0-20181025233525-e6aa09a032df h1:0qMnOwc8HWxJYvsA6jE616dmQcuoJOCOAndIGjsMj3o=
 github.com/pivotal-cf/jhanda v0.0.0-20181025233525-e6aa09a032df/go.mod h1:GNr2RBRX0Gs2FaJRi4KUrfQV32EhnjQ3Fj+nw87cx08=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
