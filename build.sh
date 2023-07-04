@@ -5,8 +5,10 @@ function main() {
   version="${1}"
 
   for os in darwin linux; do
-    GOOS="${os}" GOARCH=amd64 go build -o "faux-${os}-amd64" -ldflags "-X main.version=${version}" .
-    shasum -a 256 "faux-${os}-amd64"
+    for arch in amd64 arm64; do
+      GOOS="${os}" GOARCH="${arch}" go build -o "faux-${os}-${arch}" -ldflags "-X main.version=${version}" .
+      shasum -a 256 "faux-${os}-${arch}"
+    done
   done
 
 }
