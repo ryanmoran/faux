@@ -51,7 +51,7 @@ func Parse(path, name string) (Fake, error) {
 		return Fake{}, fmt.Errorf("failed to parse scope file: %w", err)
 	}
 
-	var imports []Import
+	imports := []Import{{Path: pkg.Path()}}
 	for _, i := range file.Imports {
 		buffer := bytes.NewBuffer(nil)
 
