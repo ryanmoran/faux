@@ -57,6 +57,39 @@ var _ = Describe("Interface", func() {
 		})
 	})
 
+	Context("when the interface has type params", func() {
+		var typeParam *types.TypeParam
+
+		BeforeEach(func() {
+			signature := types.NewSignature(nil, nil, nil, false)
+			methods := []*types.Func{
+				types.NewFunc(0, pkg, "SomeMethod", signature),
+			}
+
+			underlying = types.NewInterfaceType(methods, nil).Complete()
+			namedType = types.NewNamed(typeName, underlying, nil)
+
+			typeName := types.NewTypeName(0, pkg, "T", nil)
+			constraint := types.NewNamed(types.NewTypeName(0, nil, "any", nil), types.NewInterface(nil, nil), nil)
+			typeParam = types.NewTypeParam(typeName, constraint)
+			namedType.SetTypeParams([]*types.TypeParam{typeParam})
+		})
+
+		It("includes those methods in the parsed interface", func() {
+			iface, err := parsing.NewInterface(namedType)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(iface).To(Equal(parsing.Interface{
+				Name: "SomeType",
+				Signatures: []parsing.Signature{
+					{
+						Name: "SomeMethod",
+					},
+				},
+				TypeArgs: []*types.TypeParam{typeParam},
+			}))
+		})
+	})
+
 	Context("when the underlying type is not interface", func() {
 		BeforeEach(func() {
 			intType := types.Universe.Lookup("int").Type()

@@ -61,6 +61,7 @@ var _ = Describe("faux", func() {
 		Entry("variadic", "variadic_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "VariadicInterface"),
 		Entry("functions", "function_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "FunctionInterface"),
 		Entry("name", "named_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "NamedInterface", "--name", "SomeNamedInterface"),
+		Entry("generic", "generic_interface.go", "--file", "./fixtures/interfaces.go", "--interface", "GenericInterface"),
 	)
 
 	Context("when the source file is provided via an environment variable", func() {
