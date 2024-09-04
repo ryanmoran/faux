@@ -35,7 +35,12 @@ func (c *Context) BuildFakeType(iface parsing.Interface) NamedType {
 		calls = append(calls, c.BuildCallStruct(signature))
 	}
 
-	return NewNamedType(TitleString(iface.Name), NewStruct(calls))
+	var targs []Type
+	for _, targ := range iface.TypeArgs {
+		targs = append(targs, NewType(targ, nil))
+	}
+
+	return NewNamedType(TitleString(iface.Name), NewStruct(calls), targs)
 }
 
 func (c *Context) BuildCallStruct(signature parsing.Signature) Field {
@@ -58,7 +63,7 @@ func (c *Context) BuildCallStruct(signature parsing.Signature) Field {
 }
 
 func (c *Context) BuildMutex() Field {
-	return NewField("mutex", NewNamedType("sync.Mutex", NewStruct(nil)))
+	return NewField("mutex", NewNamedType("sync.Mutex", NewStruct(nil), nil))
 }
 
 func (c *Context) BuildCallCount() Field {
@@ -74,7 +79,7 @@ func (c *Context) BuildReceives(args []parsing.Argument) Field {
 		}
 		name = TitleString(name)
 
-		field := NewField(name, NewType(arg.Type))
+		field := NewField(name, NewType(arg.Type, arg.TypeArgs))
 		fields = append(fields, field)
 	}
 
@@ -90,7 +95,7 @@ func (c *Context) BuildReturns(args []parsing.Argument) Field {
 		}
 		name = TitleString(name)
 
-		field := NewField(name, NewType(arg.Type))
+		field := NewField(name, NewType(arg.Type, arg.TypeArgs))
 		fields = append(fields, field)
 	}
 
@@ -121,7 +126,7 @@ func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
 			name = ParamName(i)
 		}
 
-		params = append(params, NewParam(name, NewType(arg.Type), arg.Variadic))
+		params = append(params, NewParam(name, NewType(arg.Type, arg.TypeArgs), arg.Variadic))
 	}
 
 	return params
@@ -130,7 +135,7 @@ func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
 func (c *Context) BuildResults(args []parsing.Argument) []Result {
 	var results []Result
 	for _, arg := range args {
-		results = append(results, NewResult(NewType(arg.Type)))
+		results = append(results, NewResult(NewType(arg.Type, arg.TypeArgs)))
 	}
 
 	return results
@@ -143,7 +148,7 @@ func (c *Context) BuildBody(receiver Receiver, signature parsing.Signature) []St
 		c.BuildIncrementStatement(receiver, signature.Name),
 	}
 
-	for i, _ := range signature.Params {
+	for i := range signature.Params {
 		statements = append(statements, c.BuildAssignStatement(receiver, signature.Name, i, signature.Params))
 	}
 
@@ -195,7 +200,7 @@ func (c *Context) BuildAssignStatement(receiver Receiver, name string, index int
 	paramField := receivesField.Type.(Struct).FieldWithName(argName)
 	selector := NewSelector(receiver, callField, receivesField, paramField)
 	paramName := ParamName(index)
-	param := NewParam(paramName, NewType(arg.Type), arg.Variadic)
+	param := NewParam(paramName, NewType(arg.Type, arg.TypeArgs), arg.Variadic)
 
 	return NewAssignStatement(selector, param)
 }

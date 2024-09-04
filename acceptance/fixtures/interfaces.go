@@ -32,6 +32,15 @@ type NamedInterface interface {
 	SomeMethod(someParam *bytes.Buffer) (someResult io.Reader)
 }
 
+type Result[T, E any] struct {
+	Value T
+	Error E
+}
+
+type GenericInterface[T, S comparable] interface {
+	SomeMethod(map[T]S) Result[int, error]
+}
+
 type BurntSushiParser struct {
 	Key toml.Key
 }

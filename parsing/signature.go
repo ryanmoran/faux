@@ -1,6 +1,8 @@
 package parsing
 
-import "go/types"
+import (
+	"go/types"
+)
 
 type Signature struct {
 	Name    string

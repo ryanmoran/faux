@@ -7,11 +7,17 @@ import (
 
 type Interface struct {
 	Name       string
+	TypeArgs   []*types.TypeParam
 	Signatures []Signature
 }
 
 func NewInterface(n *types.Named) (Interface, error) {
 	var signatures []Signature
+
+	var targs []*types.TypeParam
+	for i := 0; i < n.TypeParams().Len(); i++ {
+		targs = append(targs, n.TypeParams().At(i))
+	}
 
 	underlying, ok := n.Underlying().(*types.Interface)
 	if !ok {
@@ -24,6 +30,7 @@ func NewInterface(n *types.Named) (Interface, error) {
 
 	return Interface{
 		Name:       n.Obj().Name(),
+		TypeArgs:   targs,
 		Signatures: signatures,
 	}, nil
 }

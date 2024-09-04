@@ -39,8 +39,12 @@ func TypeName(t Type) string {
 		return s.Underlying.String()
 
 	case NamedType:
+		var targs []string
+		for _, targ := range s.TypeArgs {
+			targs = append(targs, TitleString(TypeName(targ)))
+		}
 		parts := strings.Split(s.Name, ".")
-		return parts[len(parts)-1]
+		return strings.Join(append([]string{parts[len(parts)-1]}, targs...), "")
 
 	case Pointer:
 		return TypeName(s.Elem)
@@ -59,13 +63,13 @@ func FieldTypeName(args []parsing.Argument, index int) string {
 	nameCounts := map[string]int{}
 	counter := map[string]int{}
 	for _, arg := range args {
-		name := TypeName(NewType(arg.Type))
+		name := TypeName(NewType(arg.Type, arg.TypeArgs))
 		nameCounts[name]++
 	}
 
 	var indexedCounts []int
 	for _, arg := range args {
-		name := TypeName(NewType(arg.Type))
+		name := TypeName(NewType(arg.Type, arg.TypeArgs))
 		if nameCounts[name] > 1 {
 			counter[name]++
 			indexedCounts = append(indexedCounts, counter[name])
@@ -74,7 +78,7 @@ func FieldTypeName(args []parsing.Argument, index int) string {
 		}
 	}
 
-	typeName := TypeName(NewType(args[index].Type))
+	typeName := TypeName(NewType(args[index].Type, args[index].TypeArgs))
 	if indexedCounts[index] > 0 {
 		typeName = fmt.Sprintf("%s_%d", typeName, indexedCounts[index])
 	}
