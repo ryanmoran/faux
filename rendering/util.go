@@ -59,17 +59,17 @@ func TypeName(t Type) string {
 	}
 }
 
-func FieldTypeName(args []parsing.Argument, index int) string {
+func FieldTypeName(args []parsing.Argument, index int, imports []parsing.Import) string {
 	nameCounts := map[string]int{}
 	counter := map[string]int{}
 	for _, arg := range args {
-		name := TypeName(NewType(arg.Type, arg.TypeArgs))
+		name := TypeName(NewType(arg.Type, arg.TypeArgs, imports))
 		nameCounts[name]++
 	}
 
 	var indexedCounts []int
 	for _, arg := range args {
-		name := TypeName(NewType(arg.Type, arg.TypeArgs))
+		name := TypeName(NewType(arg.Type, arg.TypeArgs, imports))
 		if nameCounts[name] > 1 {
 			counter[name]++
 			indexedCounts = append(indexedCounts, counter[name])
@@ -78,7 +78,7 @@ func FieldTypeName(args []parsing.Argument, index int) string {
 		}
 	}
 
-	typeName := TypeName(NewType(args[index].Type, args[index].TypeArgs))
+	typeName := TypeName(NewType(args[index].Type, args[index].TypeArgs, imports))
 	if indexedCounts[index] > 0 {
 		typeName = fmt.Sprintf("%s_%d", typeName, indexedCounts[index])
 	}
