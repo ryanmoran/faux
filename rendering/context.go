@@ -13,7 +13,7 @@ func NewContext() *Context {
 }
 
 func (c *Context) Build(pfake parsing.Fake) File {
-	fake := c.BuildFakeType(pfake.Interface)
+	fake := c.BuildFakeType(pfake)
 
 	var imports []Import
 	for _, imp := range pfake.Imports {
@@ -22,42 +22,42 @@ func (c *Context) Build(pfake parsing.Fake) File {
 
 	var funcs []Func
 	for _, signature := range pfake.Interface.Signatures {
-		funcs = append(funcs, c.BuildFunc(fake, signature))
+		funcs = append(funcs, c.BuildFunc(fake, signature, pfake.Imports))
 	}
 
 	return NewFile("fakes", imports, []NamedType{fake}, funcs)
 }
 
-func (c *Context) BuildFakeType(iface parsing.Interface) NamedType {
+func (c *Context) BuildFakeType(fake parsing.Fake) NamedType {
 	var calls []Field
 
-	for _, signature := range iface.Signatures {
-		calls = append(calls, c.BuildCallStruct(signature))
+	for _, signature := range fake.Interface.Signatures {
+		calls = append(calls, c.BuildCallStruct(signature, fake.Imports))
 	}
 
 	var targs []Type
-	for _, targ := range iface.TypeArgs {
-		targs = append(targs, NewType(targ, nil))
+	for _, targ := range fake.Interface.TypeArgs {
+		targs = append(targs, NewType(targ, nil, fake.Imports))
 	}
 
-	return NewNamedType(TitleString(iface.Name), NewStruct(calls), targs)
+	return NewNamedType(TitleString(fake.Interface.Name), NewStruct(calls), targs)
 }
 
-func (c *Context) BuildCallStruct(signature parsing.Signature) Field {
+func (c *Context) BuildCallStruct(signature parsing.Signature, imports []parsing.Import) Field {
 	methodCallName := fmt.Sprintf("%sCall", signature.Name)
 	var fields []Field
 	fields = append(fields, c.BuildMutex())
 	fields = append(fields, c.BuildCallCount())
 
 	if len(signature.Params) > 0 {
-		fields = append(fields, c.BuildReceives(signature.Params))
+		fields = append(fields, c.BuildReceives(signature.Params, imports))
 	}
 
 	if len(signature.Results) > 0 {
-		fields = append(fields, c.BuildReturns(signature.Results))
+		fields = append(fields, c.BuildReturns(signature.Results, imports))
 	}
 
-	fields = append(fields, c.BuildStub(signature))
+	fields = append(fields, c.BuildStub(signature, imports))
 
 	return NewField(methodCallName, NewStruct(fields))
 }
@@ -70,55 +70,55 @@ func (c *Context) BuildCallCount() Field {
 	return NewField("CallCount", NewBasicType(BasicInt))
 }
 
-func (c *Context) BuildReceives(args []parsing.Argument) Field {
+func (c *Context) BuildReceives(args []parsing.Argument, imports []parsing.Import) Field {
 	var fields []Field
 	for i, arg := range args {
 		name := arg.Name
 		if name == "" {
-			name = FieldTypeName(args, i)
+			name = FieldTypeName(args, i, imports)
 		}
 		name = TitleString(name)
 
-		field := NewField(name, NewType(arg.Type, arg.TypeArgs))
+		field := NewField(name, NewType(arg.Type, arg.TypeArgs, imports))
 		fields = append(fields, field)
 	}
 
 	return NewField("Receives", NewStruct(fields))
 }
 
-func (c *Context) BuildReturns(args []parsing.Argument) Field {
+func (c *Context) BuildReturns(args []parsing.Argument, imports []parsing.Import) Field {
 	var fields []Field
 	for i, arg := range args {
 		name := arg.Name
 		if name == "" {
-			name = FieldTypeName(args, i)
+			name = FieldTypeName(args, i, imports)
 		}
 		name = TitleString(name)
 
-		field := NewField(name, NewType(arg.Type, arg.TypeArgs))
+		field := NewField(name, NewType(arg.Type, arg.TypeArgs, imports))
 		fields = append(fields, field)
 	}
 
 	return NewField("Returns", NewStruct(fields))
 }
 
-func (c *Context) BuildStub(signature parsing.Signature) Field {
-	params := c.BuildParams(signature.Params, false)
-	results := c.BuildResults(signature.Results)
+func (c *Context) BuildStub(signature parsing.Signature, imports []parsing.Import) Field {
+	params := c.BuildParams(signature.Params, false, imports)
+	results := c.BuildResults(signature.Results, imports)
 	stub := NewFunc("", Receiver{}, params, results, nil)
 	return NewField("Stub", stub)
 }
 
-func (c *Context) BuildFunc(fake NamedType, signature parsing.Signature) Func {
+func (c *Context) BuildFunc(fake NamedType, signature parsing.Signature, imports []parsing.Import) Func {
 	receiver := NewReceiver("f", NewPointer(fake))
-	params := c.BuildParams(signature.Params, true)
-	results := c.BuildResults(signature.Results)
-	body := c.BuildBody(receiver, signature)
+	params := c.BuildParams(signature.Params, true, imports)
+	results := c.BuildResults(signature.Results, imports)
+	body := c.BuildBody(receiver, signature, imports)
 
 	return NewFunc(signature.Name, receiver, params, results, body)
 }
 
-func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
+func (c *Context) BuildParams(args []parsing.Argument, named bool, imports []parsing.Import) []Param {
 	var params []Param
 	for i, arg := range args {
 		var name string
@@ -126,22 +126,22 @@ func (c *Context) BuildParams(args []parsing.Argument, named bool) []Param {
 			name = ParamName(i)
 		}
 
-		params = append(params, NewParam(name, NewType(arg.Type, arg.TypeArgs), arg.Variadic))
+		params = append(params, NewParam(name, NewType(arg.Type, arg.TypeArgs, imports), arg.Variadic))
 	}
 
 	return params
 }
 
-func (c *Context) BuildResults(args []parsing.Argument) []Result {
+func (c *Context) BuildResults(args []parsing.Argument, imports []parsing.Import) []Result {
 	var results []Result
 	for _, arg := range args {
-		results = append(results, NewResult(NewType(arg.Type, arg.TypeArgs)))
+		results = append(results, NewResult(NewType(arg.Type, arg.TypeArgs, imports)))
 	}
 
 	return results
 }
 
-func (c *Context) BuildBody(receiver Receiver, signature parsing.Signature) []Statement {
+func (c *Context) BuildBody(receiver Receiver, signature parsing.Signature, imports []parsing.Import) []Statement {
 	statements := []Statement{
 		c.BuildMutexLockStatement(receiver, signature.Name),
 		c.BuildMutexUnlockStatement(receiver, signature.Name),
@@ -149,13 +149,13 @@ func (c *Context) BuildBody(receiver Receiver, signature parsing.Signature) []St
 	}
 
 	for i := range signature.Params {
-		statements = append(statements, c.BuildAssignStatement(receiver, signature.Name, i, signature.Params))
+		statements = append(statements, c.BuildAssignStatement(receiver, signature.Name, i, signature.Params, imports))
 	}
 
-	statements = append(statements, c.BuildStubIfStatement(receiver, signature))
+	statements = append(statements, c.BuildStubIfStatement(receiver, signature, imports))
 
 	if len(signature.Results) > 0 {
-		statements = append(statements, c.BuildReturnStatement(receiver, signature))
+		statements = append(statements, c.BuildReturnStatement(receiver, signature, imports))
 	}
 
 	return statements
@@ -186,7 +186,7 @@ func (c *Context) BuildIncrementStatement(receiver Receiver, name string) Increm
 	return NewIncrementStatement(selector)
 }
 
-func (c *Context) BuildAssignStatement(receiver Receiver, name string, index int, args []parsing.Argument) AssignStatement {
+func (c *Context) BuildAssignStatement(receiver Receiver, name string, index int, args []parsing.Argument, imports []parsing.Import) AssignStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", name))
 	receivesField := callField.Type.(Struct).FieldWithName("Receives")
@@ -194,24 +194,24 @@ func (c *Context) BuildAssignStatement(receiver Receiver, name string, index int
 	arg := args[index]
 	argName := arg.Name
 	if argName == "" {
-		argName = FieldTypeName(args, index)
+		argName = FieldTypeName(args, index, imports)
 	}
 
 	paramField := receivesField.Type.(Struct).FieldWithName(argName)
 	selector := NewSelector(receiver, callField, receivesField, paramField)
 	paramName := ParamName(index)
-	param := NewParam(paramName, NewType(arg.Type, arg.TypeArgs), arg.Variadic)
+	param := NewParam(paramName, NewType(arg.Type, arg.TypeArgs, imports), arg.Variadic)
 
 	return NewAssignStatement(selector, param)
 }
 
-func (c *Context) BuildStubIfStatement(receiver Receiver, signature parsing.Signature) IfStatement {
+func (c *Context) BuildStubIfStatement(receiver Receiver, signature parsing.Signature, imports []parsing.Import) IfStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", signature.Name))
 	stubField := callField.Type.(Struct).FieldWithName("Stub")
 	selector := NewSelector(receiver, callField, stubField)
 
-	params := c.BuildParams(signature.Params, true)
+	params := c.BuildParams(signature.Params, true, imports)
 
 	condition := NewEquality(false, selector, NewNil())
 	var body []Statement
@@ -225,7 +225,7 @@ func (c *Context) BuildStubIfStatement(receiver Receiver, signature parsing.Sign
 	return NewIfStatement(condition, body)
 }
 
-func (c *Context) BuildReturnStatement(receiver Receiver, signature parsing.Signature) ReturnStatement {
+func (c *Context) BuildReturnStatement(receiver Receiver, signature parsing.Signature, imports []parsing.Import) ReturnStatement {
 	receiverStruct := receiver.Type.(Pointer).Elem.(NamedType).Type.(Struct)
 	callField := receiverStruct.FieldWithName(fmt.Sprintf("%sCall", signature.Name))
 	returnsField := callField.Type.(Struct).FieldWithName("Returns")
@@ -234,7 +234,7 @@ func (c *Context) BuildReturnStatement(receiver Receiver, signature parsing.Sign
 	for i, arg := range signature.Results {
 		argName := arg.Name
 		if argName == "" {
-			argName = FieldTypeName(signature.Results, i)
+			argName = FieldTypeName(signature.Results, i, imports)
 		}
 
 		resultField := returnsField.Type.(Struct).FieldWithName(argName)

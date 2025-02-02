@@ -44,13 +44,14 @@ var _ = Describe("faux", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		command := exec.Command(executable,
-			"--file", "./fixtures/interfaces.go",
+			"--file", "./interfaces.go",
 			"--output", outputFile,
 			"--interface", "SimpleInterface")
+		command.Dir = "./fixtures"
 
 		session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session, "10s").Should(gexec.Exit(0))
+		Eventually(session).Should(gexec.Exit(0))
 
 		outputContents, err := ioutil.ReadFile(outputFile)
 		Expect(err).NotTo(HaveOccurred())

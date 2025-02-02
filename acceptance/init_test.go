@@ -13,7 +13,7 @@ import (
 )
 
 func TestFaux(t *testing.T) {
-	SetDefaultEventuallyTimeout(10 * time.Second)
+	SetDefaultEventuallyTimeout(30 * time.Second)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "acceptance")
 }

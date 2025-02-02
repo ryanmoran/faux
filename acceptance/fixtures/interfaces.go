@@ -2,10 +2,13 @@ package fixtures
 
 import (
 	"bytes"
+	"context"
 	"io"
 
 	"github.com/BurntSushi/toml"
 	"github.com/pivotal-cf/jhanda"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 type VariadicInterface interface {
@@ -43,4 +46,9 @@ type GenericInterface[T, S comparable] interface {
 
 type BurntSushiParser struct {
 	Key toml.Key
+}
+
+type PackageConflictInterface interface {
+	ListNodes(ctx context.Context) (*v1.NodeList, error)
+	ListDaemonsets(ctx context.Context) (*appsv1.DaemonSetList, error)
 }
