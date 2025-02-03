@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"go/format"
 	"go/token"
 	"log"
@@ -69,6 +70,8 @@ Flags:
 		options.Package = filepath.Dir(path)
 	}
 
+	fmt.Fprintf(os.Stderr, "Generating fake %s at %s...", options.Interface, options.Output)
+
 	fake, err := parsing.Parse(options.Package, options.Interface)
 	if err != nil {
 		stderr.Fatal(err)
@@ -112,4 +115,6 @@ Flags:
 	if err != nil {
 		stderr.Fatalf("could not write output file: %s", err)
 	}
+
+	fmt.Fprintln(os.Stderr, "done!")
 }
