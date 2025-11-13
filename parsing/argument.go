@@ -18,10 +18,25 @@ func NewArgument(v *types.Var, variadic bool) Argument {
 		typeArgs []types.Type
 	)
 
-	if t, ok := v.Type().(*types.Named); ok {
+	switch t := v.Type().(type) {
+	case *types.Named:
 		targs := t.TypeArgs()
 		for i := 0; i < targs.Len(); i++ {
 			typeArgs = append(typeArgs, targs.At(i))
+		}
+
+		if t.Obj().Pkg() != nil {
+			pkg = t.Obj().Pkg().Path()
+		}
+
+	case *types.Alias:
+		// Handle type aliases - they can also have type arguments
+		// For aliases, we need to look at the underlying type to get type arguments
+		if named, ok := t.Underlying().(*types.Named); ok {
+			targs := named.TypeArgs()
+			for i := 0; i < targs.Len(); i++ {
+				typeArgs = append(typeArgs, targs.At(i))
+			}
 		}
 
 		if t.Obj().Pkg() != nil {
