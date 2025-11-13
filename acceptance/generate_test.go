@@ -71,6 +71,9 @@ var _ = Describe("faux", func() {
 		Entry("functions", "function_interface.go", "--file", "./interfaces.go", "--interface", "FunctionInterface"),
 		Entry("name", "named_interface.go", "--file", "./interfaces.go", "--interface", "NamedInterface", "--name", "SomeNamedInterface"),
 		Entry("generic", "generic_interface.go", "--file", "./interfaces.go", "--interface", "GenericInterface"),
+		Entry("aliases", "alias_interface.go", "--file", "./interfaces.go", "--interface", "AliasInterface"),
+		Entry("simple generic aliases", "simple_generic_alias_interface.go", "--file", "./interfaces.go", "--interface", "SimpleGenericAliasInterface"),
+		Entry("simple nested generics", "simple_nested_generic_interface.go", "--file", "./interfaces.go", "--interface", "SimpleNestedGenericInterface"),
 		Entry("package conflict", "package_conflict_interface.go", "--file", "./interfaces.go", "--interface", "PackageConflictInterface"),
 	)
 

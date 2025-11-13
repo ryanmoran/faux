@@ -42,6 +42,34 @@ func NewType(t types.Type, targs []types.Type, imports []parsing.Import) Type {
 
 		return NewDefinedType(name, targTypes)
 
+	case *types.Alias:
+		// Handle type aliases by resolving to their underlying type
+		// but preserving the alias name for proper representation
+		name := s.String()
+
+		obj := s.Obj()
+		pkg := obj.Pkg()
+		if pkg != nil {
+			pname := pkg.Name()
+			for _, p := range imports {
+				if p.Path == pkg.Path() && p.Name != "" {
+					pname = p.Name
+				}
+			}
+
+			name = fmt.Sprintf("%s.%s", pname, obj.Name())
+		}
+
+		// Check if the alias has type arguments to handle generics
+		var targTypes []Type
+		for _, targ := range targs {
+			targTypes = append(targTypes, NewType(targ, nil, imports))
+		}
+
+		// For type aliases, we want to represent them as the alias name
+		// which will correctly resolve in the generated code
+		return NewDefinedType(name, targTypes)
+
 	case *types.TypeParam:
 		return NewNamedType(s.String(), NewType(s.Constraint(), nil, imports), nil)
 
