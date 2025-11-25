@@ -1,6 +1,6 @@
 module github.com/ryanmoran/faux
 
-go 1.23.0
+go 1.25.4
 
 require (
 	github.com/onsi/ginkgo v1.16.5
