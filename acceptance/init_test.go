@@ -19,8 +19,9 @@ func TestFaux(t *testing.T) {
 }
 
 var (
-	executable string
-	version    string
+	executable         string
+	trimpathExecutable string
+	version            string
 )
 
 var _ = BeforeSuite(func() {
@@ -31,6 +32,9 @@ var _ = BeforeSuite(func() {
 	executable, err = gexec.Build("github.com/ryanmoran/faux",
 		"-ldflags",
 		fmt.Sprintf("-X main.version=%s", version))
+	Expect(err).NotTo(HaveOccurred())
+
+	trimpathExecutable, err = gexec.Build("github.com/ryanmoran/faux", "-trimpath")
 	Expect(err).NotTo(HaveOccurred())
 })
 
