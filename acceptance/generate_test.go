@@ -77,6 +77,46 @@ var _ = Describe("faux", func() {
 		Entry("package conflict", "package_conflict_interface.go", "--file", "./interfaces.go", "--interface", "PackageConflictInterface"),
 	)
 
+	DescribeTable("fake generation with -trimpath",
+		func(trimpathBinary, trimpathGOFLAGS bool, fixture string, flags ...string) {
+			flags = append(flags, "--output", outputFile)
+
+			bin := executable
+			if trimpathBinary {
+				bin = trimpathExecutable
+			}
+
+			command := exec.Command(bin, flags...)
+			command.Dir = "./fixtures"
+			if trimpathGOFLAGS {
+				command.Env = append(os.Environ(), "GOFLAGS=-trimpath")
+			}
+
+			session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			outputContent, err := ioutil.ReadFile(outputFile)
+			Expect(err).NotTo(HaveOccurred())
+
+			expectedContent, err := ioutil.ReadFile(filepath.Join("fixtures", "fakes", fixture))
+			Expect(err).NotTo(HaveOccurred())
+
+			var lines []interface{}
+			for _, line := range strings.Split(string(expectedContent), "\n") {
+				lines = append(lines, line)
+			}
+
+			Expect(string(outputContent)).To(ContainLines(lines...))
+		},
+
+		Entry("binary built with -trimpath, stdlib", true, false, "io_reader.go", "--package", "io", "--interface", "Reader"),
+		Entry("binary built with -trimpath, local", true, false, "simple_interface.go", "--file", "./interfaces.go", "--interface", "SimpleInterface"),
+		Entry("GOFLAGS=-trimpath, stdlib", false, true, "io_reader.go", "--package", "io", "--interface", "Reader"),
+		Entry("GOFLAGS=-trimpath, local", false, true, "simple_interface.go", "--file", "./interfaces.go", "--interface", "SimpleInterface"),
+		Entry("GOFLAGS=-trimpath, gopath", false, true, "jhanda_command.go", "--package", "github.com/pivotal-cf/jhanda", "--interface", "Command"),
+	)
+
 	Context("when the source file is provided via an environment variable", func() {
 		It("generates a fake", func() {
 			command := exec.Command(executable,
